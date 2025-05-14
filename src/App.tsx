@@ -16,6 +16,8 @@ import TeachersPage from "./pages/teachers/TeachersPage";
 import ClassesPage from "./pages/classes/ClassesPage";
 import FinancePage from "./pages/finance/FinancePage";
 import ProductsPage from "./pages/products/ProductsPage";
+import EventsPage from "./pages/events/EventsPage";
+import SettingsPage from "./pages/settings/SettingsPage";
 import NotFound from "./pages/NotFound";
 
 import { Sidebar } from "./components/layout/Sidebar";
@@ -149,6 +151,28 @@ const App = () => (
                 <ProtectedRoute>
                   <Layout>
                     <ProductsPage />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            
+            <Route
+              path="/eventos"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <EventsPage />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            
+            <Route
+              path="/configuracoes"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <SettingsPage />
                   </Layout>
                 </ProtectedRoute>
               }
