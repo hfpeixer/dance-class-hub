@@ -1,4 +1,5 @@
 
+import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
@@ -23,9 +24,7 @@ import NotFound from "./pages/NotFound";
 import { Sidebar } from "./components/layout/Sidebar";
 import { Header } from "./components/layout/Header";
 
-const queryClient = new QueryClient();
-
-// Protected route component
+// ProtectedRoute component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
@@ -58,132 +57,138 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   );
 };
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <AuthProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <Index />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            
-            <Route
-              path="/alunos"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <StudentsPage />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            
-            <Route
-              path="/escolas"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <SchoolsPage />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            
-            <Route
-              path="/modalidades"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <ModalitiesPage />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            
-            <Route
-              path="/professores"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <TeachersPage />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            
-            <Route
-              path="/turmas"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <ClassesPage />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            
-            <Route
-              path="/financeiro"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <FinancePage />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            
-            <Route
-              path="/produtos"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <ProductsPage />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            
-            <Route
-              path="/eventos"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <EventsPage />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            
-            <Route
-              path="/configuracoes"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <SettingsPage />
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-            
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </AuthProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  const queryClient = new QueryClient();
+  
+  return (
+    <React.StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <AuthProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/login" element={<LoginPage />} />
+                
+                <Route
+                  path="/"
+                  element={
+                    <ProtectedRoute>
+                      <Layout>
+                        <Index />
+                      </Layout>
+                    </ProtectedRoute>
+                  }
+                />
+                
+                <Route
+                  path="/alunos"
+                  element={
+                    <ProtectedRoute>
+                      <Layout>
+                        <StudentsPage />
+                      </Layout>
+                    </ProtectedRoute>
+                  }
+                />
+                
+                <Route
+                  path="/escolas"
+                  element={
+                    <ProtectedRoute>
+                      <Layout>
+                        <SchoolsPage />
+                      </Layout>
+                    </ProtectedRoute>
+                  }
+                />
+                
+                <Route
+                  path="/modalidades"
+                  element={
+                    <ProtectedRoute>
+                      <Layout>
+                        <ModalitiesPage />
+                      </Layout>
+                    </ProtectedRoute>
+                  }
+                />
+                
+                <Route
+                  path="/professores"
+                  element={
+                    <ProtectedRoute>
+                      <Layout>
+                        <TeachersPage />
+                      </Layout>
+                    </ProtectedRoute>
+                  }
+                />
+                
+                <Route
+                  path="/turmas"
+                  element={
+                    <ProtectedRoute>
+                      <Layout>
+                        <ClassesPage />
+                      </Layout>
+                    </ProtectedRoute>
+                  }
+                />
+                
+                <Route
+                  path="/financeiro"
+                  element={
+                    <ProtectedRoute>
+                      <Layout>
+                        <FinancePage />
+                      </Layout>
+                    </ProtectedRoute>
+                  }
+                />
+                
+                <Route
+                  path="/produtos"
+                  element={
+                    <ProtectedRoute>
+                      <Layout>
+                        <ProductsPage />
+                      </Layout>
+                    </ProtectedRoute>
+                  }
+                />
+                
+                <Route
+                  path="/eventos"
+                  element={
+                    <ProtectedRoute>
+                      <Layout>
+                        <EventsPage />
+                      </Layout>
+                    </ProtectedRoute>
+                  }
+                />
+                
+                <Route
+                  path="/configuracoes"
+                  element={
+                    <ProtectedRoute>
+                      <Layout>
+                        <SettingsPage />
+                      </Layout>
+                    </ProtectedRoute>
+                  }
+                />
+                
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </AuthProvider>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </React.StrictMode>
+  );
+};
 
 export default App;
