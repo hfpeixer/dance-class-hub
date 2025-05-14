@@ -14,6 +14,7 @@ import {
   Settings,
   Menu,
   LogOut,
+  FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -160,7 +161,7 @@ export const Sidebar: React.FC = () => {
           <SidebarSection title="Financeiro" isCollapsed={isCollapsed}>
             <SidebarItem
               icon={DollarSign}
-              label="Mensalidades"
+              label="Financeiro"
               href="/financeiro"
               isActive={location.pathname === "/financeiro"}
               isCollapsed={isCollapsed}
@@ -184,6 +185,15 @@ export const Sidebar: React.FC = () => {
 
         {hasPermission("dashboard.view") && (
           <SidebarSection title="Sistema" isCollapsed={isCollapsed}>
+            {hasPermission("admin.access") && (
+              <SidebarItem
+                icon={FileText}
+                label="Administração"
+                href="/admin"
+                isActive={location.pathname.startsWith("/admin")}
+                isCollapsed={isCollapsed}
+              />
+            )}
             <SidebarItem
               icon={Settings}
               label="Configurações"

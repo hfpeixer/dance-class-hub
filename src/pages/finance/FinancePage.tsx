@@ -1,13 +1,18 @@
 
-import React, { useState } from "react";
-import { DollarSign, Plus, Edit, Trash2, FileText, Mail, Download } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { 
+  DollarSign, Plus, Edit, Trash2, FileText, Mail, Download, 
+  ArrowDown, ArrowUp, Filter, Check, X, RefreshCcw
+} from "lucide-react";
 import { PageTitle } from "@/components/layout/PageTitle";
 import { Button } from "@/components/ui/button";
 import { 
   Card, 
   CardContent, 
   CardHeader, 
-  CardTitle 
+  CardTitle,
+  CardDescription,
+  CardFooter
 } from "@/components/ui/card";
 import {
   Dialog,
@@ -18,12 +23,20 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import {
   Form,
   FormField,
   FormItem,
   FormLabel,
   FormControl,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import {
   Select,
@@ -40,594 +53,316 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-
-interface Payment {
-  id: string;
-  studentId: string;
-  studentName: string;
-  description: string;
-  value: number;
-  dueDate: string;
-  status: "paid" | "pending" | "overdue";
-  paymentDate?: string;
-}
-
-const paymentFormSchema = z.object({
-  studentId: z.string().min(1, "Aluno é obrigatório"),
-  description: z.string().min(1, "Descrição é obrigatória"),
-  value: z.coerce.number().min(0.01, "Valor deve ser maior que zero"),
-  dueDate: z.string().min(1, "Data de vencimento é obrigatória"),
-  status: z.enum(["paid", "pending", "overdue"]),
-  paymentDate: z.string().optional(),
-});
+import { cn } from "@/lib/utils";
+import { useFinanceData } from "@/pages/finance/hooks/useFinanceData";
+import { PaymentForm } from "@/pages/finance/components/PaymentForm";
+import { FinancialSummary } from "@/pages/finance/components/FinancialSummary";
+import { PaymentsList } from "@/pages/finance/components/PaymentsList";
+import { TransactionsList } from "@/pages/finance/components/TransactionsList";
+import { TransactionForm } from "@/pages/finance/components/TransactionForm";
 
 const FinancePage = () => {
-  const [payments, setPayments] = useState<Payment[]>([]);
-  const [openDialog, setOpenDialog] = useState(false);
-  const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [paymentToDelete, setPaymentToDelete] = useState<string | null>(null);
-  const [activeFilter, setActiveFilter] = useState<"all" | "pending" | "paid" | "overdue">("all");
+  const [activeTab, setActiveTab] = useState("payments");
+  const [activeFilter, setActiveFilter] = useState("all");
+  const [openPaymentDialog, setOpenPaymentDialog] = useState(false);
+  const [openTransactionDialog, setOpenTransactionDialog] = useState(false);
+  const [paymentToEdit, setPaymentToEdit] = useState(null);
+  const [transactionToEdit, setTransactionToEdit] = useState(null);
 
-  // Mock students
-  const students = [
-    { id: "1", name: "Ana Silva", modality: "Ballet" },
-    { id: "2", name: "Lucas Oliveira", modality: "Futsal" },
-    { id: "3", name: "Maria Santos", modality: "Jazz" },
-    { id: "4", name: "Pedro Costa", modality: "Ginástica" },
-    { id: "5", name: "Juliana Lima", modality: "Ballet" },
-  ];
+  const { 
+    payments,
+    transactions,
+    addPayment,
+    updatePayment,
+    deletePayment,
+    markAsPaid,
+    addTransaction,
+    updateTransaction,
+    deleteTransaction
+  } = useFinanceData();
 
-  const form = useForm<z.infer<typeof paymentFormSchema>>({
-    resolver: zodResolver(paymentFormSchema),
-    defaultValues: {
-      studentId: "",
-      description: "",
-      value: 0,
-      dueDate: new Date().toISOString().split('T')[0],
-      status: "pending",
-      paymentDate: "",
-    },
-  });
-
-  const onOpenDialog = (payment?: Payment) => {
-    if (payment) {
-      setEditingPayment(payment);
-      form.setValue("studentId", payment.studentId);
-      form.setValue("description", payment.description);
-      form.setValue("value", payment.value);
-      form.setValue("dueDate", payment.dueDate);
-      form.setValue("status", payment.status);
-      form.setValue("paymentDate", payment.paymentDate || "");
-    } else {
-      setEditingPayment(null);
-      form.reset({
-        studentId: "",
-        description: "",
-        value: 0,
-        dueDate: new Date().toISOString().split('T')[0],
-        status: "pending",
-        paymentDate: "",
-      });
-    }
-    setOpenDialog(true);
+  const handleNewPayment = () => {
+    setPaymentToEdit(null);
+    setOpenPaymentDialog(true);
   };
 
-  const onCloseDialog = () => {
-    setOpenDialog(false);
-    form.reset();
+  const handleEditPayment = (payment) => {
+    setPaymentToEdit(payment);
+    setOpenPaymentDialog(true);
   };
 
-  const onSubmit = (values: z.infer<typeof paymentFormSchema>) => {
-    const student = students.find(s => s.id === values.studentId);
-    
-    if (!student) {
-      toast.error("Aluno não encontrado!");
-      return;
-    }
-    
-    if (editingPayment) {
-      // Update existing payment
-      const updatedPayments = payments.map((p) =>
-        p.id === editingPayment.id
-          ? {
-              ...p,
-              studentId: values.studentId,
-              studentName: student.name,
-              description: values.description,
-              value: values.value,
-              dueDate: values.dueDate,
-              status: values.status,
-              paymentDate: values.status === "paid" ? (values.paymentDate || new Date().toISOString().split('T')[0]) : undefined,
-            }
-          : p
-      );
-      setPayments(updatedPayments);
+  const handleNewTransaction = (type = 'expense') => {
+    setTransactionToEdit({ type });
+    setOpenTransactionDialog(true);
+  };
+
+  const handleEditTransaction = (transaction) => {
+    setTransactionToEdit(transaction);
+    setOpenTransactionDialog(true);
+  };
+
+  const handlePaymentSubmit = (data) => {
+    if (paymentToEdit) {
+      updatePayment(paymentToEdit.id, data);
       toast.success("Mensalidade atualizada com sucesso!");
     } else {
-      // Add new payment
-      const newPayment: Payment = {
-        id: Date.now().toString(),
-        studentId: values.studentId,
-        studentName: student.name,
-        description: values.description,
-        value: values.value,
-        dueDate: values.dueDate,
-        status: values.status,
-        paymentDate: values.status === "paid" ? (values.paymentDate || new Date().toISOString().split('T')[0]) : undefined,
-      };
-      setPayments([...payments, newPayment]);
+      addPayment(data);
       toast.success("Mensalidade cadastrada com sucesso!");
     }
-    onCloseDialog();
+    setOpenPaymentDialog(false);
   };
 
-  const confirmDelete = (id: string) => {
-    setPaymentToDelete(id);
-    setDeleteConfirmOpen(true);
-  };
-
-  const deletePayment = () => {
-    if (paymentToDelete) {
-      setPayments(payments.filter((p) => p.id !== paymentToDelete));
-      toast.success("Mensalidade removida com sucesso!");
-      setDeleteConfirmOpen(false);
-      setPaymentToDelete(null);
+  const handleTransactionSubmit = (data) => {
+    if (transactionToEdit?.id) {
+      updateTransaction(transactionToEdit.id, data);
+      toast.success(`${data.type === 'income' ? 'Recebimento' : 'Despesa'} atualizado com sucesso!`);
+    } else {
+      addTransaction(data);
+      toast.success(`${data.type === 'income' ? 'Recebimento' : 'Despesa'} cadastrado com sucesso!`);
     }
+    setOpenTransactionDialog(false);
   };
 
-  const markAsPaid = (id: string) => {
-    const updatedPayments = payments.map((p) =>
-      p.id === id
-        ? {
-            ...p,
-            status: "paid" as const,
-            paymentDate: new Date().toISOString().split('T')[0],
-          }
-        : p
-    );
-    setPayments(updatedPayments);
-    toast.success("Pagamento registrado com sucesso!");
-  };
+  // Cálculos financeiros
+  const totalIncome = transactions
+    .filter(t => t.type === 'income')
+    .reduce((acc, curr) => acc + curr.amount, 0);
   
-  const sendReminder = (payment: Payment) => {
-    toast.success(`Lembrete enviado para ${payment.studentName}`);
-  };
+  const totalExpenses = transactions
+    .filter(t => t.type === 'expense')
+    .reduce((acc, curr) => acc + curr.amount, 0);
 
-  const filteredPayments = payments.filter(payment => {
-    if (activeFilter === "all") return true;
-    return payment.status === activeFilter;
-  });
-
-  const getInitials = (name: string): string => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .substring(0, 2);
-  };
+  const totalReceivedPayments = payments
+    .filter(p => p.status === 'paid')
+    .reduce((acc, curr) => acc + curr.value, 0);
   
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "paid":
-        return <Badge className="bg-green-500 hover:bg-green-600">Pago</Badge>;
-      case "pending":
-        return <Badge variant="outline" className="border-yellow-500 text-yellow-600">Pendente</Badge>;
-      case "overdue":
-        return <Badge className="bg-red-500 hover:bg-red-600">Atrasado</Badge>;
-      default:
-        return null;
-    }
-  };
+  const totalPendingPayments = payments
+    .filter(p => p.status === 'pending')
+    .reduce((acc, curr) => acc + curr.value, 0);
+  
+  const totalOverduePayments = payments
+    .filter(p => p.status === 'overdue')
+    .reduce((acc, curr) => acc + curr.value, 0);
 
   return (
     <div className="p-6">
       <PageTitle
         title="Financeiro"
-        subtitle="Gerencie as mensalidades e pagamentos"
+        subtitle="Gerencie as mensalidades, recebimentos e despesas da escola"
         icon={DollarSign}
-      >
-        <Button 
-          className="bg-dance-primary hover:bg-dance-secondary"
-          onClick={() => onOpenDialog()}
-        >
-          <Plus className="mr-2 h-4 w-4" /> Nova Mensalidade
-        </Button>
-      </PageTitle>
+      />
 
-      {payments.length === 0 ? (
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex flex-col items-center justify-center min-h-[300px] text-center">
-              <DollarSign className="h-16 w-16 text-muted-foreground mb-4" />
-              <h3 className="text-xl font-medium mb-2">Nenhuma mensalidade cadastrada</h3>
-              <p className="text-muted-foreground mb-6">
-                Cadastre sua primeira mensalidade para começar.
-              </p>
-              <Button 
-                className="bg-dance-primary hover:bg-dance-secondary"
-                onClick={() => onOpenDialog()}
-              >
-                <Plus className="mr-2 h-4 w-4" /> Cadastrar Mensalidade
-              </Button>
+      <div className="mb-6">
+        <Tabs defaultValue="payments" value={activeTab} onValueChange={setActiveTab}>
+          <div className="flex justify-between items-center mb-4">
+            <TabsList>
+              <TabsTrigger value="payments">Mensalidades</TabsTrigger>
+              <TabsTrigger value="transactions">Fluxo de Caixa</TabsTrigger>
+              <TabsTrigger value="reports">Relatórios</TabsTrigger>
+            </TabsList>
+            
+            <div className="flex gap-2">
+              {activeTab === "payments" && (
+                <Button 
+                  className="bg-dance-primary hover:bg-dance-secondary"
+                  onClick={handleNewPayment}
+                >
+                  <Plus className="mr-2 h-4 w-4" /> Nova Mensalidade
+                </Button>
+              )}
+              
+              {activeTab === "transactions" && (
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline"
+                    className="border-green-500 text-green-600 hover:bg-green-50"
+                    onClick={() => handleNewTransaction('income')}
+                  >
+                    <ArrowDown className="mr-2 h-4 w-4" /> Recebimento
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    className="border-red-500 text-red-600 hover:bg-red-50"
+                    onClick={() => handleNewTransaction('expense')}
+                  >
+                    <ArrowUp className="mr-2 h-4 w-4" /> Despesa
+                  </Button>
+                </div>
+              )}
             </div>
-          </CardContent>
-        </Card>
-      ) : (
-        <>
-          <div className="flex flex-wrap gap-4 mb-6 mt-6">
-            <Card className="flex-1 min-w-[200px]">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Total de Mensalidades
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{payments.length}</div>
-              </CardContent>
-            </Card>
-            <Card className="flex-1 min-w-[200px]">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Valor Total
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  R$ {payments.reduce((acc, curr) => acc + curr.value, 0).toFixed(2)}
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="flex-1 min-w-[200px]">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Recebido
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-green-500">
-                  R$ {payments.filter(p => p.status === "paid").reduce((acc, curr) => acc + curr.value, 0).toFixed(2)}
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="flex-1 min-w-[200px]">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Pendente
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-yellow-500">
-                  R$ {payments.filter(p => p.status === "pending").reduce((acc, curr) => acc + curr.value, 0).toFixed(2)}
-                </div>
-              </CardContent>
-            </Card>
           </div>
 
-          <Card>
-            <CardContent className="p-0">
-              <div className="border-b border-border p-4">
-                <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
-                  <div className="flex gap-2">
-                    <Button 
-                      variant={activeFilter === "all" ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setActiveFilter("all")}
-                      className={activeFilter === "all" ? "bg-dance-primary hover:bg-dance-secondary" : ""}
-                    >
-                      Todas
-                    </Button>
-                    <Button 
-                      variant={activeFilter === "pending" ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setActiveFilter("pending")}
-                      className={activeFilter === "pending" ? "bg-dance-primary hover:bg-dance-secondary" : ""}
-                    >
-                      Pendentes
-                    </Button>
-                    <Button 
-                      variant={activeFilter === "paid" ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setActiveFilter("paid")}
-                      className={activeFilter === "paid" ? "bg-dance-primary hover:bg-dance-secondary" : ""}
-                    >
-                      Pagas
-                    </Button>
-                    <Button 
-                      variant={activeFilter === "overdue" ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setActiveFilter("overdue")}
-                      className={activeFilter === "overdue" ? "bg-dance-primary hover:bg-dance-secondary" : ""}
-                    >
-                      Atrasadas
-                    </Button>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm">
-                      <Download className="h-4 w-4 mr-1" /> Exportar
-                    </Button>
-                    <Button variant="outline" size="sm">
-                      <FileText className="h-4 w-4 mr-1" /> Relatório
-                    </Button>
-                  </div>
+          <TabsContent value="payments" className="space-y-4">
+            <FinancialSummary 
+              totalReceived={totalReceivedPayments}
+              totalPending={totalPendingPayments}
+              totalOverdue={totalOverduePayments}
+              totalCount={payments.length}
+            />
+            
+            <PaymentsList 
+              payments={payments}
+              onEdit={handleEditPayment}
+              onDelete={deletePayment}
+              onMarkPaid={markAsPaid}
+              activeFilter={activeFilter}
+              setActiveFilter={setActiveFilter}
+            />
+          </TabsContent>
+
+          <TabsContent value="transactions" className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardDescription>Entradas</CardDescription>
+                  <CardTitle className="text-2xl font-bold text-green-500">
+                    R$ {totalIncome.toFixed(2)}
+                  </CardTitle>
+                </CardHeader>
+              </Card>
+              
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardDescription>Saídas</CardDescription>
+                  <CardTitle className="text-2xl font-bold text-red-500">
+                    R$ {totalExpenses.toFixed(2)}
+                  </CardTitle>
+                </CardHeader>
+              </Card>
+              
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardDescription>Saldo</CardDescription>
+                  <CardTitle className={cn(
+                    "text-2xl font-bold",
+                    (totalIncome - totalExpenses) >= 0 ? "text-green-500" : "text-red-500"
+                  )}>
+                    R$ {(totalIncome - totalExpenses).toFixed(2)}
+                  </CardTitle>
+                </CardHeader>
+              </Card>
+            </div>
+            
+            <TransactionsList
+              transactions={transactions}
+              onEdit={handleEditTransaction}
+              onDelete={deleteTransaction}
+            />
+          </TabsContent>
+
+          <TabsContent value="reports" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Relatórios Financeiros</CardTitle>
+                <CardDescription>
+                  Gere relatórios financeiros detalhados
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid md:grid-cols-2 gap-4">
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg">Relatório de Mensalidades</CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Exporta todas as mensalidades por período
+                      </p>
+                      <div className="flex gap-2">
+                        <Input type="date" className="max-w-[160px]" />
+                        <Input type="date" className="max-w-[160px]" />
+                        <Button className="bg-dance-primary hover:bg-dance-secondary">
+                          <Download className="mr-2 h-4 w-4" />
+                          Exportar
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg">Relatório de Fluxo de Caixa</CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Exporta entradas e saídas por período
+                      </p>
+                      <div className="flex gap-2">
+                        <Input type="date" className="max-w-[160px]" />
+                        <Input type="date" className="max-w-[160px]" />
+                        <Button className="bg-dance-primary hover:bg-dance-secondary">
+                          <Download className="mr-2 h-4 w-4" />
+                          Exportar
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
-              </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
 
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Aluno</TableHead>
-                      <TableHead>Descrição</TableHead>
-                      <TableHead>Valor</TableHead>
-                      <TableHead>Vencimento</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Ações</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredPayments.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={6} className="text-center py-8">
-                          Nenhuma mensalidade encontrada para o filtro selecionado.
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      filteredPayments.map((payment) => (
-                        <TableRow key={payment.id}>
-                          <TableCell>
-                            <div className="flex items-center gap-3">
-                              <Avatar className="h-8 w-8">
-                                <AvatarFallback className="bg-dance-primary/10 text-dance-primary">
-                                  {getInitials(payment.studentName)}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div>
-                                <p className="font-medium">{payment.studentName}</p>
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell>{payment.description}</TableCell>
-                          <TableCell>R$ {payment.value.toFixed(2)}</TableCell>
-                          <TableCell>
-                            {new Date(payment.dueDate).toLocaleDateString('pt-BR')}
-                          </TableCell>
-                          <TableCell>
-                            {getStatusBadge(payment.status)}
-                            {payment.status === "paid" && payment.paymentDate && (
-                              <p className="text-xs text-muted-foreground mt-1">
-                                Pago em {new Date(payment.paymentDate).toLocaleDateString('pt-BR')}
-                              </p>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex gap-1">
-                              {payment.status !== "paid" && (
-                                <Button 
-                                  variant="outline" 
-                                  size="icon"
-                                  onClick={() => markAsPaid(payment.id)}
-                                  title="Marcar como pago"
-                                >
-                                  <DollarSign className="h-4 w-4 text-green-600" />
-                                </Button>
-                              )}
-                              <Button 
-                                variant="outline" 
-                                size="icon"
-                                onClick={() => onOpenDialog(payment)}
-                                title="Editar mensalidade"
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              {payment.status === "pending" || payment.status === "overdue" ? (
-                                <Button 
-                                  variant="outline" 
-                                  size="icon"
-                                  onClick={() => sendReminder(payment)}
-                                  title="Enviar lembrete"
-                                >
-                                  <Mail className="h-4 w-4 text-blue-600" />
-                                </Button>
-                              ) : null}
-                              <Button 
-                                variant="outline" 
-                                size="icon"
-                                onClick={() => confirmDelete(payment.id)}
-                                className="text-destructive hover:text-destructive"
-                                title="Excluir mensalidade"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-        </>
-      )}
-
-      {/* Payment Form Dialog */}
-      <Dialog open={openDialog} onOpenChange={setOpenDialog}>
+      <Dialog open={openPaymentDialog} onOpenChange={setOpenPaymentDialog}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>
-              {editingPayment ? "Editar Mensalidade" : "Nova Mensalidade"}
+              {paymentToEdit ? "Editar Mensalidade" : "Nova Mensalidade"}
             </DialogTitle>
             <DialogDescription>
-              {editingPayment
+              {paymentToEdit
                 ? "Edite as informações da mensalidade."
                 : "Preencha as informações para cadastrar uma nova mensalidade."}
             </DialogDescription>
           </DialogHeader>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="studentId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Aluno</FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
-                      defaultValue={field.value}
-                      value={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione o aluno" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {students.map((student) => (
-                          <SelectItem key={student.id} value={student.id}>
-                            {student.name} - {student.modality}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Descrição</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Ex: Mensalidade Julho/2023" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="value"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Valor (R$)</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        step="0.01"
-                        min="0.01"
-                        placeholder="0.00"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="dueDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Data de Vencimento</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="date"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
-                      defaultValue={field.value}
-                      value={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione o status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="pending">Pendente</SelectItem>
-                        <SelectItem value="paid">Pago</SelectItem>
-                        <SelectItem value="overdue">Atrasado</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              {form.watch("status") === "paid" && (
-                <FormField
-                  control={form.control}
-                  name="paymentDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Data de Pagamento</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="date"
-                          {...field}
-                          value={field.value || new Date().toISOString().split('T')[0]}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-              
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={onCloseDialog}>
-                  Cancelar
-                </Button>
-                <Button type="submit" className="bg-dance-primary hover:bg-dance-secondary">
-                  {editingPayment ? "Salvar Alterações" : "Cadastrar Mensalidade"}
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
+          <PaymentForm 
+            payment={paymentToEdit}
+            onSubmit={handlePaymentSubmit}
+            onCancel={() => setOpenPaymentDialog(false)}
+          />
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+      <Dialog open={openTransactionDialog} onOpenChange={setOpenTransactionDialog}>
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Confirmar exclusão</DialogTitle>
+            <DialogTitle>
+              {transactionToEdit?.id 
+                ? (transactionToEdit.type === 'income' ? "Editar Recebimento" : "Editar Despesa") 
+                : (transactionToEdit?.type === 'income' ? "Novo Recebimento" : "Nova Despesa")}
+            </DialogTitle>
             <DialogDescription>
-              Tem certeza que deseja excluir esta mensalidade? Esta ação não pode ser desfeita.
+              {transactionToEdit?.id
+                ? "Edite as informações da transação."
+                : "Preencha as informações para registrar a transação."}
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)}>
-              Cancelar
-            </Button>
-            <Button variant="destructive" onClick={deletePayment}>
-              Excluir
-            </Button>
-          </DialogFooter>
+          <TransactionForm 
+            transaction={transactionToEdit}
+            onSubmit={handleTransactionSubmit}
+            onCancel={() => setOpenTransactionDialog(false)}
+          />
         </DialogContent>
       </Dialog>
     </div>

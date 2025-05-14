@@ -19,14 +19,18 @@ import FinancePage from "./pages/finance/FinancePage";
 import ProductsPage from "./pages/products/ProductsPage";
 import EventsPage from "./pages/events/EventsPage";
 import SettingsPage from "./pages/settings/SettingsPage";
+import AdminPage from "./pages/admin/AdminPage";
 import NotFound from "./pages/NotFound";
 
 import { Sidebar } from "./components/layout/Sidebar";
 import { Header } from "./components/layout/Header";
 
 // ProtectedRoute component
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuth();
+const ProtectedRoute: React.FC<{ children: React.ReactNode; requiredPermission?: string }> = ({ 
+  children, 
+  requiredPermission 
+}) => {
+  const { isAuthenticated, isLoading, hasPermission } = useAuth();
   const location = useLocation();
 
   if (isLoading) {
@@ -39,6 +43,11 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+  
+  // Verificar permissão se necessário
+  if (requiredPermission && !hasPermission(requiredPermission)) {
+    return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;
@@ -58,8 +67,8 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 };
 
 const App = () => {
-  // Create a new QueryClient instance inside the component
-  const queryClient = new QueryClient();
+  // Create a new QueryClient instance
+  const [queryClient] = React.useState(() => new QueryClient());
   
   return (
     <QueryClientProvider client={queryClient}>
@@ -85,7 +94,7 @@ const App = () => {
               <Route
                 path="/alunos"
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute requiredPermission="students.manage">
                     <Layout>
                       <StudentsPage />
                     </Layout>
@@ -96,7 +105,7 @@ const App = () => {
               <Route
                 path="/escolas"
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute requiredPermission="students.manage">
                     <Layout>
                       <SchoolsPage />
                     </Layout>
@@ -107,7 +116,7 @@ const App = () => {
               <Route
                 path="/modalidades"
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute requiredPermission="students.manage">
                     <Layout>
                       <ModalitiesPage />
                     </Layout>
@@ -118,7 +127,7 @@ const App = () => {
               <Route
                 path="/professores"
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute requiredPermission="teachers.manage">
                     <Layout>
                       <TeachersPage />
                     </Layout>
@@ -129,7 +138,7 @@ const App = () => {
               <Route
                 path="/turmas"
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute requiredPermission="classes.manage">
                     <Layout>
                       <ClassesPage />
                     </Layout>
@@ -140,7 +149,7 @@ const App = () => {
               <Route
                 path="/financeiro"
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute requiredPermission="finance.manage">
                     <Layout>
                       <FinancePage />
                     </Layout>
@@ -151,7 +160,7 @@ const App = () => {
               <Route
                 path="/produtos"
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute requiredPermission="finance.manage">
                     <Layout>
                       <ProductsPage />
                     </Layout>
@@ -162,7 +171,7 @@ const App = () => {
               <Route
                 path="/eventos"
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute requiredPermission="finance.manage">
                     <Layout>
                       <EventsPage />
                     </Layout>
@@ -171,9 +180,20 @@ const App = () => {
               />
               
               <Route
+                path="/admin"
+                element={
+                  <ProtectedRoute requiredPermission="admin.access">
+                    <Layout>
+                      <AdminPage />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              
+              <Route
                 path="/configuracoes"
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute requiredPermission="dashboard.view">
                     <Layout>
                       <SettingsPage />
                     </Layout>

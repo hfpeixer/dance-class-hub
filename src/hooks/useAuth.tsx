@@ -39,6 +39,8 @@ export const useAuth = () => {
         return hasRole(["admin", "secretary"]);
       case "reports.view":
         return hasRole(["admin", "financial"]);
+      case "admin.access":
+        return hasRole(["admin"]);
       default:
         return false;
     }
