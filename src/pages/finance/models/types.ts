@@ -1,5 +1,6 @@
 
-// Define all finance related data types
+// Define all type interfaces for the finance module
+
 export interface Student {
   id: string;
   name: string;
@@ -10,32 +11,29 @@ export interface Student {
   modality: string;
   class: string;
   status: "active" | "inactive";
-  address?: string;
-  cityState?: string;
-  zipCode?: string;
-  parentName?: string;
-  parentPhone?: string;
-  parentCPF?: string;
+  address: string;
+  cityState: string;
+  zipCode: string;
+  parentName: string;
+  parentPhone: string;
+  parentCPF: string;
   enrollmentDate: string;
-  notes?: string;
+  notes: string;
 }
 
 export interface Payment {
   id: string;
   studentId: string;
   studentName: string;
-  amount: number;
-  date: string;
+  value?: number; // The amount to be paid
+  amount?: number; // Legacy field, use value instead
+  date?: string; // Date when payment was made (for paid status)
   description: string;
-  method: string;
+  method?: string;
   category: string;
-  status: "paid" | "pending" | "overdue";
+  status: "paid" | "pending" | "overdue" | "cancelled";
   dueDate: string;
   notes?: string;
-  value?: number; // Added for compatibility with existing code
-  installments?: number;
-  currentInstallment?: number;
-  paymentDate?: string;
 }
 
 export interface Bill {
@@ -46,29 +44,20 @@ export interface Bill {
   value: number;
   dueDate: string;
   installments: number;
-  documentNumber?: string;
-  status?: "paid" | "pending" | "overdue";
+  status?: "paid" | "pending" | "overdue" | "cancelled";
   paymentDate?: string;
-  currentInstallment?: number;
   notes?: string;
-}
-
-export interface Supplier {
-  id: string;
-  name: string;
 }
 
 export interface Transaction {
   id: string;
-  date: string;
-  amount: number;
   description: string;
+  amount: number;
+  date: string;
   category: string;
-  method: string;
   type: "income" | "expense";
-  notes?: string;
-  relatedTo?: string;
   paymentMethod?: string;
+  notes?: string;
 }
 
 export interface Enrollment {
@@ -76,30 +65,11 @@ export interface Enrollment {
   studentId: string;
   studentName: string;
   modality: string;
-  className: string;
-  startDate: string;
-  endDate?: string;
-  status: "active" | "inactive" | "completed";
-  value: number;
-  notes?: string;
-  date?: string;
-  installments?: number;
-  modalityName?: string;
-}
-
-// Class and Modality interfaces for enrollment management
-export interface Modality {
-  id: string;
-  name: string;
+  class: string;
+  enrollmentDate: string;
+  status: "active" | "inactive" | "cancelled";
+  enrollmentFee: number;
   monthlyFee: number;
-  description?: string;
-}
-
-export interface Class {
-  id: string;
-  name: string;
-  modalityId: string;
-  schedule: string;
-  instructor: string;
-  maxStudents?: number;
+  paymentDay: number;
+  notes?: string;
 }

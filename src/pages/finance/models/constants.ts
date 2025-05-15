@@ -1,11 +1,31 @@
 
+// Finance module constants
+
+export const PAYMENT_STATUS = {
+  PAID: "paid",
+  PENDING: "pending",
+  OVERDUE: "overdue",
+  CANCELLED: "cancelled"
+} as const;
+
 export const PAYMENT_METHODS = [
   "Dinheiro",
   "Cartão de Crédito",
   "Cartão de Débito",
-  "Boleto Bancário",
   "PIX",
-  "Transferência Bancária"
+  "Transferência Bancária",
+  "Boleto Bancário",
+  "Cheque"
+];
+
+export const PAYMENT_CATEGORIES = [
+  "Mensalidade",
+  "Matrícula",
+  "Material",
+  "Uniforme",
+  "Evento",
+  "Aulas Extras",
+  "Outros"
 ];
 
 export const EXPENSE_CATEGORIES = [
@@ -22,10 +42,24 @@ export const EXPENSE_CATEGORIES = [
   "Outros"
 ];
 
-export const INCOME_CATEGORIES = [
-  "Mensalidades",
-  "Matrículas",
-  "Vendas",
-  "Eventos",
+export const MODALITY_TYPES = [
+  "Ballet",
+  "Jazz",
+  "Hip Hop",
+  "Contemporâneo",
+  "Dança de Salão",
+  "Futsal",
+  "Ginástica",
+  "Ritmica",
   "Outros"
+];
+
+export const CLASS_DAYS = [
+  "Segunda-feira",
+  "Terça-feira",
+  "Quarta-feira",
+  "Quinta-feira",
+  "Sexta-feira",
+  "Sábado",
+  "Domingo"
 ];
