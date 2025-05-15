@@ -18,8 +18,10 @@ export interface Student {
   birthday?: string;
   parentName?: string;
   parentPhone?: string;
+  parentCPF?: string;
   enrollmentDate?: string;
   notes?: string;
+  modalities?: string[];
 }
 
 // Initial mock data
@@ -39,8 +41,10 @@ const initialStudents: Student[] = [
     birthday: "2011-05-15",
     parentName: "Maria Silva",
     parentPhone: "(11) 98765-4322",
+    parentCPF: "123.456.789-00",
     enrollmentDate: "2023-01-10",
-    notes: "Aluna aplicada e dedicada."
+    notes: "Aluna aplicada e dedicada.",
+    modalities: ["Ballet"]
   },
   {
     id: "2",
@@ -57,8 +61,10 @@ const initialStudents: Student[] = [
     birthday: "2009-08-20",
     parentName: "João Oliveira",
     parentPhone: "(11) 98765-4324",
+    parentCPF: "987.654.321-00",
     enrollmentDate: "2022-03-15",
-    notes: "Participou do campeonato regional."
+    notes: "Participou do campeonato regional.",
+    modalities: ["Futsal", "Ginástica"]
   },
   {
     id: "3",
@@ -75,8 +81,10 @@ const initialStudents: Student[] = [
     birthday: "2013-03-10",
     parentName: "José Santos",
     parentPhone: "(11) 98765-4326",
+    parentCPF: "456.789.123-00",
     enrollmentDate: "2023-02-20",
-    notes: "Demonstra grande talento para dança."
+    notes: "Demonstra grande talento para dança.",
+    modalities: ["Jazz"]
   },
   {
     id: "4",
@@ -93,8 +101,10 @@ const initialStudents: Student[] = [
     birthday: "2008-11-25",
     parentName: "Ana Costa",
     parentPhone: "(11) 98765-4328",
+    parentCPF: "321.654.987-00",
     enrollmentDate: "2021-09-05",
-    notes: "Atleta com potencial para competições."
+    notes: "Atleta com potencial para competições.",
+    modalities: ["Ginástica"]
   },
   {
     id: "5",
@@ -111,8 +121,10 @@ const initialStudents: Student[] = [
     birthday: "2015-07-30",
     parentName: "Roberto Lima",
     parentPhone: "(11) 98765-4330",
+    parentCPF: "789.123.456-00",
     enrollmentDate: "2022-08-15",
-    notes: "Está em processo de mudança de cidade."
+    notes: "Está em processo de mudança de cidade.",
+    modalities: ["Ballet"]
   },
 ];
 
@@ -155,6 +167,8 @@ export function useStudents() {
     const newStudent = {
       ...studentData,
       id: Date.now().toString(), // Generate a unique ID
+      // If modalities is provided, set the main modality as the first one
+      modality: studentData.modalities ? studentData.modalities[0] : '',
     } as Student;
     
     setStudents(prevStudents => [...prevStudents, newStudent]);
@@ -163,9 +177,17 @@ export function useStudents() {
   // Update an existing student
   const updateStudent = (id: string, studentData: Partial<Student>) => {
     setStudents(prevStudents => 
-      prevStudents.map(student => 
-        student.id === id ? { ...student, ...studentData } : student
-      )
+      prevStudents.map(student => {
+        if (student.id === id) {
+          // Update modality if modalities array is provided
+          const updatedStudent = { ...student, ...studentData };
+          if (studentData.modalities && studentData.modalities.length > 0) {
+            updatedStudent.modality = studentData.modalities[0];
+          }
+          return updatedStudent;
+        }
+        return student;
+      })
     );
   };
 
