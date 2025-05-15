@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -291,7 +290,7 @@ export const StudentForm = ({ initialData, onSubmit, onCancel }: StudentFormProp
                           </SelectItem>
                         ))
                       ) : (
-                        <SelectItem value="" disabled>
+                        <SelectItem value="no-selection" disabled>
                           Selecione uma modalidade primeiro
                         </SelectItem>
                       )}

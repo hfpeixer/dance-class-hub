@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Settings, UserPlus, Search, Shield, Clock, Trash2, Edit, CheckCircle, XCircle, MoreHorizontal } from "lucide-react";
 import { PageTitle } from "@/components/layout/PageTitle";
@@ -333,8 +332,12 @@ const AdminPage = () => {
       // Cria novo usuário
       const newUser: User = {
         id: Date.now().toString(),
-        ...data,
-        createdAt: new Date().toISOString(),
+        name: data.name || "",
+        email: data.email || "",
+        role: data.role as "admin" | "secretary" | "financial" | "teacher",
+        password: data.password || "",
+        isActive: true,
+        createdAt: new Date().toISOString()
       };
       
       setUsers([...users, newUser]);
