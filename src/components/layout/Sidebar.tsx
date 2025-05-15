@@ -90,7 +90,7 @@ export const Sidebar: React.FC = () => {
               <Music2 className="h-5 w-5 text-white animate-dance" />
             </div>
             <span className="text-lg font-bold text-sidebar-foreground">
-              Dance<span className="text-dance-primary">School</span>
+              Espaço<span className="text-dance-primary">Corpore</span>
             </span>
           </Link>
         )}
