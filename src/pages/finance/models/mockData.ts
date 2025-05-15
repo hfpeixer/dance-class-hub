@@ -1,5 +1,5 @@
 // Import models
-import { Student, Payment, Bill, Transaction, Enrollment, Modality, Class } from './types';
+import { Student, Payment, Bill, Transaction, Enrollment, Modality, Class, Supplier } from './types';
 
 // Mock data for students
 export const STUDENTS: Student[] = [
@@ -101,13 +101,31 @@ export const STUDENTS: Student[] = [
 ];
 
 // Mock data for suppliers
-export const SUPPLIERS = [
-  "Fornecedor de Materiais Didáticos",
-  "Empresa de Limpeza",
-  "Companhia de Água",
-  "Companhia de Energia",
-  "Operadora de Internet",
-  "Manutenção Predial"
+export const SUPPLIERS: Supplier[] = [
+  {
+    id: "s1",
+    name: "Fornecedor de Materiais Didáticos"
+  },
+  {
+    id: "s2",
+    name: "Empresa de Limpeza"
+  },
+  {
+    id: "s3",
+    name: "Companhia de Água"
+  },
+  {
+    id: "s4",
+    name: "Companhia de Energia"
+  },
+  {
+    id: "s5",
+    name: "Operadora de Internet"
+  },
+  {
+    id: "s6",
+    name: "Manutenção Predial"
+  }
 ];
 
 // Mock data for payments

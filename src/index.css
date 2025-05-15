@@ -16,6 +16,7 @@ body {
   background-color: #f9fafb; /* light gray background */
   color: #1f2937; /* dark gray text */
   font-family: 'Inter', sans-serif;
+  overflow-y: auto; /* Enable vertical scrolling */
 }
 
 /* Ensure app containers allow scrolling */
@@ -39,9 +40,9 @@ body {
 
 /* Theme-based custom colors */
 :root {
-  --dance-primary: #B45309;
-  --dance-secondary: #92400E;
-  --dance-accent: #FBBF24;
+  --dance-primary: #9b87f5;
+  --dance-secondary: #7E69AB;
+  --dance-accent: #6E59A5;
 }
 
 /* Custom theme colors */
@@ -77,9 +78,9 @@ body {
 
     --radius: 0.5rem;
 
-    --dance-primary: 31 81% 37%;
-    --dance-secondary: 31 81% 31%;
-    --dance-accent: 43 96% 56%;
+    --dance-primary: 253 82% 75%;
+    --dance-secondary: 262 25% 54%;
+    --dance-accent: 261 31% 50%;
   }
 
   .dark {
@@ -111,9 +112,9 @@ body {
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
 
-    --dance-primary: 31 81% 45%;
-    --dance-secondary: 31 81% 35%;
-    --dance-accent: 43 96% 56%;
+    --dance-primary: 253 82% 75%;
+    --dance-secondary: 262 25% 54%;
+    --dance-accent: 261 31% 50%;
   }
 }
 
@@ -128,12 +129,12 @@ body {
 
 @layer components {
   .bg-dance-primary {
-    @apply bg-amber-700;
+    @apply bg-purple-400;
   }
   .hover\:bg-dance-secondary:hover {
-    @apply bg-amber-800;
+    @apply bg-purple-600;
   }
   .bg-dance-accent {
-    @apply bg-amber-400;
+    @apply bg-purple-500;
   }
 }

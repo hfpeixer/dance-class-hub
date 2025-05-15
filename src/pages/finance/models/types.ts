@@ -21,6 +21,16 @@ export interface Student {
   notes: string;
 }
 
+export interface Supplier {
+  id: string;
+  name: string;
+  address?: string;
+  phone?: string;
+  email?: string;
+  category?: string;
+  contactPerson?: string;
+}
+
 export interface Payment {
   id: string;
   studentId: string;
