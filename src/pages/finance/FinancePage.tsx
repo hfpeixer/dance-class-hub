@@ -207,6 +207,13 @@ const FinancePage = () => {
     setOpenEnrollmentDialog(false);
   };
 
+  // Handle payment marking as paid
+  const handleMarkAsPaid = (paymentId) => {
+    // Default to "Dinheiro" as the payment method
+    markAsPaid(paymentId, "Dinheiro");
+    toast.success("Mensalidade marcada como paga!");
+  };
+
   // Cálculos financeiros
   const totalIncome = transactions
     .filter(t => t.type === 'income')
@@ -218,15 +225,15 @@ const FinancePage = () => {
 
   const totalReceivedPayments = payments
     .filter(p => p.status === 'paid')
-    .reduce((acc, curr) => acc + curr.value, 0);
+    .reduce((acc, curr) => (curr.value !== undefined ? acc + curr.value : acc), 0);
   
   const totalPendingPayments = payments
     .filter(p => p.status === 'pending')
-    .reduce((acc, curr) => acc + curr.value, 0);
+    .reduce((acc, curr) => (curr.value !== undefined ? acc + curr.value : acc), 0);
   
   const totalOverduePayments = payments
     .filter(p => p.status === 'overdue')
-    .reduce((acc, curr) => acc + curr.value, 0);
+    .reduce((acc, curr) => (curr.value !== undefined ? acc + curr.value : acc), 0);
 
   const totalPendingBills = bills
     .filter(b => b.status === 'pending')
@@ -320,7 +327,7 @@ const FinancePage = () => {
               payments={payments}
               onEdit={handleEditPayment}
               onDelete={deletePayment}
-              onMarkPaid={markAsPaid}
+              onMarkPaid={handleMarkAsPaid}
               activeFilter={activePaymentsFilter}
               setActiveFilter={setActivePaymentsFilter}
             />

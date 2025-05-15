@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Enrollment } from '../hooks/useFinanceData';
+import { Enrollment } from '../models/types';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 
@@ -115,14 +115,6 @@ export const EnrollmentsList = ({
           >
             Inativas
           </Button>
-          <Button 
-            variant={activeFilter === "cancelled" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setActiveFilter("cancelled")}
-            className={activeFilter === "cancelled" ? "bg-dance-primary hover:bg-dance-secondary" : ""}
-          >
-            Canceladas
-          </Button>
         </div>
         
         <div className="overflow-x-auto">
@@ -150,7 +142,6 @@ export const EnrollmentsList = ({
                   <TableRow 
                     key={enrollment.id}
                     className={cn(
-                      enrollment.status === 'cancelled' && 'bg-red-50/50',
                       enrollment.status === 'inactive' && 'bg-orange-50/50'
                     )}
                   >
@@ -172,12 +163,10 @@ export const EnrollmentsList = ({
                         className={cn(
                           enrollment.status === "active" && "border-green-500 bg-green-500/10 text-green-700",
                           enrollment.status === "inactive" && "border-yellow-500 bg-yellow-500/10 text-yellow-700",
-                          enrollment.status === "cancelled" && "border-red-500 bg-red-500/10 text-red-700",
                         )}
                       >
                         {enrollment.status === "active" && "Ativa"}
                         {enrollment.status === "inactive" && "Inativa"}
-                        {enrollment.status === "cancelled" && "Cancelada"}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -190,12 +179,10 @@ export const EnrollmentsList = ({
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Ações</DropdownMenuLabel>
                           <DropdownMenuSeparator />
-                          {enrollment.status !== 'cancelled' && (
-                            <DropdownMenuItem onClick={() => onEdit(enrollment)}>
-                              <Edit className="mr-2 h-4 w-4" />
-                              Editar
-                            </DropdownMenuItem>
-                          )}
+                          <DropdownMenuItem onClick={() => onEdit(enrollment)}>
+                            <Edit className="mr-2 h-4 w-4" />
+                            Editar
+                          </DropdownMenuItem>
                           {enrollment.status === 'active' && (
                             <DropdownMenuItem onClick={() => handleConfirmCancel(enrollment.id)}>
                               <XCircle className="mr-2 h-4 w-4 text-orange-500" />

@@ -23,7 +23,13 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Payment } from "../hooks/useFinanceData";
+import { Payment } from "../models/types";
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from "@/components/ui/tooltip";
 
 interface PaymentsListProps {
   payments: Payment[];
@@ -97,8 +103,13 @@ export const PaymentsList: React.FC<PaymentsListProps> = ({
     }
   };
 
+  // Safe formatting function to handle undefined values
+  const formatCurrency = (value: number | undefined): string => {
+    return value !== undefined ? value.toFixed(2) : "0.00";
+  };
+
   return (
-    <>
+    <TooltipProvider>
       <Card>
         <CardContent className="p-0">
           <div className="border-b border-border p-4">
@@ -194,7 +205,7 @@ export const PaymentsList: React.FC<PaymentsListProps> = ({
                         </div>
                       </TableCell>
                       <TableCell>{payment.description}</TableCell>
-                      <TableCell>R$ {payment.value.toFixed(2)}</TableCell>
+                      <TableCell>R$ {formatCurrency(payment.value)}</TableCell>
                       <TableCell>
                         {new Date(payment.dueDate).toLocaleDateString('pt-BR')}
                       </TableCell>
@@ -209,42 +220,66 @@ export const PaymentsList: React.FC<PaymentsListProps> = ({
                       <TableCell>
                         <div className="flex gap-1">
                           {payment.status !== "paid" && (
-                            <Button 
-                              variant="outline" 
-                              size="icon"
-                              onClick={() => onMarkPaid(payment.id)}
-                              title="Marcar como pago"
-                            >
-                              <DollarSign className="h-4 w-4 text-green-600" />
-                            </Button>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button 
+                                  variant="outline" 
+                                  size="icon"
+                                  onClick={() => onMarkPaid(payment.id)}
+                                >
+                                  <DollarSign className="h-4 w-4 text-green-600" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Marcar como pago</p>
+                              </TooltipContent>
+                            </Tooltip>
                           )}
-                          <Button 
-                            variant="outline" 
-                            size="icon"
-                            onClick={() => onEdit(payment)}
-                            title="Editar mensalidade"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button 
+                                variant="outline" 
+                                size="icon"
+                                onClick={() => onEdit(payment)}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Editar mensalidade</p>
+                            </TooltipContent>
+                          </Tooltip>
                           {payment.status === "pending" || payment.status === "overdue" ? (
-                            <Button 
-                              variant="outline" 
-                              size="icon"
-                              onClick={() => sendReminder(payment)}
-                              title="Enviar lembrete"
-                            >
-                              <Mail className="h-4 w-4 text-blue-600" />
-                            </Button>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button 
+                                  variant="outline" 
+                                  size="icon"
+                                  onClick={() => sendReminder(payment)}
+                                >
+                                  <Mail className="h-4 w-4 text-blue-600" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Enviar lembrete</p>
+                              </TooltipContent>
+                            </Tooltip>
                           ) : null}
-                          <Button 
-                            variant="outline" 
-                            size="icon"
-                            onClick={() => confirmDelete(payment.id)}
-                            className="text-destructive hover:text-destructive"
-                            title="Excluir mensalidade"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button 
+                                variant="outline" 
+                                size="icon"
+                                onClick={() => confirmDelete(payment.id)}
+                                className="text-destructive hover:text-destructive"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Excluir mensalidade</p>
+                            </TooltipContent>
+                          </Tooltip>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -275,6 +310,6 @@ export const PaymentsList: React.FC<PaymentsListProps> = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>
+    </TooltipProvider>
   );
 };
