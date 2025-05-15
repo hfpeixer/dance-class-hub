@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -33,7 +34,8 @@ export interface Payment {
   category: string;
   status: "paid" | "pending" | "overdue";
   dueDate: string;
-	notes?: string;
+  notes?: string;
+  value?: number; // Added for compatibility with existing code
 }
 
 export interface Bill {
@@ -45,6 +47,9 @@ export interface Bill {
   dueDate: string;
   installments: number;
   documentNumber?: string;
+  status?: "paid" | "pending" | "overdue";
+  paymentDate?: string;
+  currentInstallment?: number;
   notes?: string;
 }
 
@@ -52,6 +57,39 @@ export interface Supplier {
   id: string;
   name: string;
 }
+
+export interface Transaction {
+  id: string;
+  date: string;
+  amount: number;
+  description: string;
+  category: string;
+  method: string;
+  type: "income" | "expense";
+  notes?: string;
+}
+
+export interface Enrollment {
+  id: string;
+  studentId: string;
+  studentName: string;
+  modality: string;
+  className: string;
+  startDate: string;
+  endDate?: string;
+  status: "active" | "inactive" | "completed";
+  value: number;
+  notes?: string;
+}
+
+export const PAYMENT_METHODS = [
+  "Dinheiro",
+  "Cartão de Crédito",
+  "Cartão de Débito",
+  "Boleto Bancário",
+  "PIX",
+  "Transferência Bancária"
+];
 
 // Mock data
 const initialStudents: Student[] = [
@@ -251,6 +289,7 @@ const initialBills: Bill[] = [
     value: 150.00,
     dueDate: "2023-10-15",
     installments: 1,
+    status: "pending",
     notes: "Referente ao mês de setembro."
   },
   {
@@ -261,6 +300,7 @@ const initialBills: Bill[] = [
     value: 300.00,
     dueDate: "2023-10-20",
     installments: 1,
+    status: "pending",
     notes: "Referente ao mês de setembro."
   },
   {
@@ -271,6 +311,7 @@ const initialBills: Bill[] = [
     value: 100.00,
     dueDate: "2023-10-25",
     installments: 1,
+    status: "pending",
     notes: "Referente ao plano de telefonia."
   },
   {
@@ -281,7 +322,56 @@ const initialBills: Bill[] = [
     value: 200.00,
     dueDate: "2023-10-30",
     installments: 2,
+    status: "pending",
     notes: "Compra realizada para o estoque."
+  }
+];
+
+const initialTransactions: Transaction[] = [
+  {
+    id: uuidv4(),
+    date: "2023-10-05",
+    amount: 500.00,
+    description: "Venda de uniformes",
+    category: "Vendas",
+    method: "Dinheiro",
+    type: "income",
+    notes: "Venda de 5 uniformes"
+  },
+  {
+    id: uuidv4(),
+    date: "2023-10-03",
+    amount: 300.00,
+    description: "Compra de material de limpeza",
+    category: "Material de Limpeza",
+    method: "Cartão de Crédito",
+    type: "expense",
+    notes: "Material para o mês de outubro"
+  }
+];
+
+const initialEnrollments: Enrollment[] = [
+  {
+    id: uuidv4(),
+    studentId: initialStudents[0].id,
+    studentName: initialStudents[0].name,
+    modality: "Futsal",
+    className: "Futsal Infantil - Terça e Quinta",
+    startDate: "2023-01-15",
+    status: "active",
+    value: 150.00,
+    notes: "Matrícula regular"
+  },
+  {
+    id: uuidv4(),
+    studentId: initialStudents[1].id,
+    studentName: initialStudents[1].name,
+    modality: "Ballet",
+    className: "Ballet Juvenil - Segunda e Sexta",
+    startDate: "2023-02-20",
+    status: "active",
+    value: 150.00,
+    notes: "Matrícula regular"
   }
 ];
 
@@ -292,6 +382,8 @@ export const useFinanceData = () => {
   const [students, setStudents] = useState<Student[]>(initialStudents);
   const [payments, setPayments] = useState<Payment[]>(initialPayments);
   const [bills, setBills] = useState<Bill[]>(initialBills);
+  const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions);
+  const [enrollments, setEnrollments] = useState<Enrollment[]>(initialEnrollments);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -335,7 +427,7 @@ export const useFinanceData = () => {
     setPayments([...payments, newPayment]);
   };
 
-  const updatePayment = (id: string, updatedPayment: Omit<Payment, 'id'>) => {
+  const updatePayment = (id: string, updatedPayment: Partial<Omit<Payment, 'id'>>) => {
     setPayments(
       payments.map((payment) =>
         payment.id === id ? { ...payment, ...updatedPayment, id } : payment
@@ -347,13 +439,39 @@ export const useFinanceData = () => {
     setPayments(payments.filter((payment) => payment.id !== id));
   };
 
+  const markAsPaid = (id: string, paymentMethod: string) => {
+    updatePayment(id, {
+      status: "paid",
+      date: new Date().toISOString().split('T')[0],
+      method: paymentMethod
+    });
+  };
+
+  // --- Transaction Management ---
+  const addTransaction = (transaction: Omit<Transaction, 'id'>) => {
+    const newTransaction = { ...transaction, id: uuidv4() };
+    setTransactions([...transactions, newTransaction]);
+  };
+
+  const updateTransaction = (id: string, updatedTransaction: Omit<Transaction, 'id'>) => {
+    setTransactions(
+      transactions.map((transaction) =>
+        transaction.id === id ? { ...transaction, ...updatedTransaction, id } : transaction
+      )
+    );
+  };
+
+  const deleteTransaction = (id: string) => {
+    setTransactions(transactions.filter((transaction) => transaction.id !== id));
+  };
+
   // --- Bill Management ---
   const addBill = (bill: Omit<Bill, 'id'>) => {
     const newBill = { ...bill, id: uuidv4() };
     setBills([...bills, newBill]);
   };
 
-  const updateBill = (id: string, updatedBill: Omit<Bill, 'id'>) => {
+  const updateBill = (id: string, updatedBill: Partial<Omit<Bill, 'id'>>) => {
     setBills(
       bills.map((bill) =>
         bill.id === id ? { ...bill, ...updatedBill, id } : bill
@@ -365,10 +483,45 @@ export const useFinanceData = () => {
     setBills(bills.filter((bill) => bill.id !== id));
   };
 
+  const markBillAsPaid = (id: string, paymentMethod: string) => {
+    updateBill(id, {
+      status: "paid",
+      paymentDate: new Date().toISOString().split('T')[0]
+    });
+  };
+
+  // --- Enrollment Management ---
+  const addEnrollment = (enrollment: Omit<Enrollment, 'id'>) => {
+    const newEnrollment = { ...enrollment, id: uuidv4() };
+    setEnrollments([...enrollments, newEnrollment]);
+  };
+
+  const updateEnrollment = (id: string, updatedEnrollment: Omit<Enrollment, 'id'>) => {
+    setEnrollments(
+      enrollments.map((enrollment) =>
+        enrollment.id === id ? { ...enrollment, ...updatedEnrollment, id } : enrollment
+      )
+    );
+  };
+
+  const deleteEnrollment = (id: string) => {
+    setEnrollments(enrollments.filter((enrollment) => enrollment.id !== id));
+  };
+
+  const cancelEnrollment = (id: string) => {
+    setEnrollments(
+      enrollments.map((enrollment) =>
+        enrollment.id === id ? { ...enrollment, status: "inactive", endDate: new Date().toISOString().split('T')[0] } : enrollment
+      )
+    );
+  };
+
   return {
     students,
     payments,
     bills,
+    transactions,
+    enrollments,
     isLoading,
     addStudent,
     updateStudent,
@@ -377,8 +530,17 @@ export const useFinanceData = () => {
     addPayment,
     updatePayment,
     deletePayment,
+    markAsPaid,
+    addTransaction,
+    updateTransaction,
+    deleteTransaction,
     addBill,
     updateBill,
     deleteBill,
+    markBillAsPaid,
+    addEnrollment,
+    updateEnrollment,
+    deleteEnrollment,
+    cancelEnrollment
   };
 };
