@@ -34,6 +34,9 @@ export interface Payment {
   status: "paid" | "pending" | "overdue" | "cancelled";
   dueDate: string;
   notes?: string;
+  installments?: number;
+  currentInstallment?: number;
+  paymentDate?: string;
 }
 
 export interface Bill {
@@ -47,6 +50,8 @@ export interface Bill {
   status?: "paid" | "pending" | "overdue" | "cancelled";
   paymentDate?: string;
   notes?: string;
+  currentInstallment?: number;
+  documentNumber?: string;
 }
 
 export interface Transaction {
@@ -58,6 +63,7 @@ export interface Transaction {
   type: "income" | "expense";
   paymentMethod?: string;
   notes?: string;
+  relatedTo?: string;
 }
 
 export interface Enrollment {
@@ -65,11 +71,35 @@ export interface Enrollment {
   studentId: string;
   studentName: string;
   modality: string;
+  modalityName?: string;
+  className?: string;
   class: string;
   enrollmentDate: string;
+  date?: string;
   status: "active" | "inactive" | "cancelled";
   enrollmentFee: number;
   monthlyFee: number;
   paymentDay: number;
   notes?: string;
+  value?: number;
+  installments?: number;
+}
+
+// Define data for modalities and classes
+export interface Modality {
+  id: string;
+  name: string;
+  description: string;
+  monthlyFee: number;
+  enrollmentFee: number;
+}
+
+export interface Class {
+  id: string;
+  name: string;
+  modalityId: string;
+  schedule: string;
+  teacher: string;
+  maxStudents: number;
+  currentStudents: number;
 }

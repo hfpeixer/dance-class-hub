@@ -1,89 +1,119 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* Make the app scrollable */
+html, body {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+body {
+  background-color: #f9fafb; /* light gray background */
+  color: #1f2937; /* dark gray text */
+  font-family: 'Inter', sans-serif;
+}
+
+/* Ensure app containers allow scrolling */
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 2rem;
+}
+
+/* Fix dialog scrolling issues */
+.dialog-content {
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+/* Theme-based custom colors */
+:root {
+  --dance-primary: #B45309;
+  --dance-secondary: #92400E;
+  --dance-accent: #FBBF24;
+}
+
+/* Custom theme colors */
 @layer base {
   :root {
-    --background: 252 37% 99%;
-    --foreground: 250 6% 10%;
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
 
     --card: 0 0% 100%;
-    --card-foreground: 250 6% 10%;
+    --card-foreground: 222.2 84% 4.9%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 250 6% 10%;
+    --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 260 84% 75%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
 
-    --secondary: 260 30% 54%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
 
-    --muted: 260 10% 94%;
-    --muted-foreground: 260 4% 50%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 260 41% 50%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
 
-    --border: 260 13% 91%;
-    --input: 260 13% 91%;
-    --ring: 260 84% 75%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
 
     --radius: 0.5rem;
 
-    --sidebar-background: 260 41% 13%;
-    --sidebar-foreground: 252 37% 99%;
-    --sidebar-primary: 260 84% 75%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 260 20% 30%;
-    --sidebar-accent-foreground: 252 37% 99%;
-    --sidebar-border: 260 20% 25%;
-    --sidebar-ring: 260 84% 75%;
+    --dance-primary: 31 81% 37%;
+    --dance-secondary: 31 81% 31%;
+    --dance-accent: 43 96% 56%;
   }
 
   .dark {
-    --background: 250 6% 10%;
-    --foreground: 252 37% 99%;
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
 
-    --card: 250 6% 10%;
-    --card-foreground: 252 37% 99%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
 
-    --popover: 250 6% 10%;
-    --popover-foreground: 252 37% 99%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
 
-    --primary: 260 84% 75%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
 
-    --secondary: 260 30% 54%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
 
-    --muted: 260 20% 16%;
-    --muted-foreground: 260 15% 65%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 260 41% 50%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
 
-    --destructive: 0 62% 50%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
 
-    --border: 260 20% 20%;
-    --input: 260 20% 20%;
-    --ring: 260 84% 75%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
 
-    --sidebar-background: 260 41% 13%;
-    --sidebar-foreground: 252 37% 99%;
-    --sidebar-primary: 260 84% 75%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 260 20% 30%;
-    --sidebar-accent-foreground: 252 37% 99%;
-    --sidebar-border: 260 20% 25%;
-    --sidebar-ring: 260 84% 75%;
+    --dance-primary: 31 81% 45%;
+    --dance-secondary: 31 81% 35%;
+    --dance-accent: 43 96% 56%;
   }
 }
 
@@ -91,88 +121,19 @@
   * {
     @apply border-border;
   }
-
-  html, body {
-    height: 100%;
-    width: 100%;
-    margin: 0;
-    padding: 0;
-    overflow-x: hidden;
-  }
-
   body {
-    @apply bg-background text-foreground font-sans;
-  }
-
-  /* Fix for page scrolling */
-  #root {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    width: 100%;
-    max-width: 100vw;
-    overflow-x: hidden;
-  }
-  
-  main {
-    flex: 1;
-    width: 100%;
-    max-width: 100%;
-    overflow-x: hidden;
-    overflow-y: auto;
-  }
-
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-heading font-semibold;
-  }
-
-  h1 {
-    @apply text-3xl md:text-4xl;
-  }
-
-  h2 {
-    @apply text-2xl md:text-3xl;
-  }
-
-  h3 {
-    @apply text-xl md:text-2xl;
-  }
-
-  h4 {
-    @apply text-lg md:text-xl;
+    @apply bg-background text-foreground;
   }
 }
 
 @layer components {
-  .dança-card {
-    @apply relative p-6 rounded-lg border border-border bg-card text-card-foreground shadow-sm transition-all duration-300 hover:shadow-md hover:border-primary/20;
+  .bg-dance-primary {
+    @apply bg-amber-700;
   }
-
-  .dança-icon-bg {
-    @apply absolute -top-4 -left-4 w-12 h-12 rounded-full flex items-center justify-center text-white text-xl;
+  .hover\:bg-dance-secondary:hover {
+    @apply bg-amber-800;
   }
-  
-  /* Responsive utilities */
-  .responsive-table {
-    @apply w-full overflow-x-auto;
-  }
-  
-  .responsive-grid {
-    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4;
-  }
-}
-
-/* Fix for mobile responsiveness */
-@media (max-width: 768px) {
-  .responsive-table {
-    @apply -mx-4;
-  }
-  
-  .responsive-card {
-    @apply flex-col;
-  }
-  
-  .responsive-button-group {
-    @apply flex-wrap justify-start;
+  .bg-dance-accent {
+    @apply bg-amber-400;
   }
 }

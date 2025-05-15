@@ -9,7 +9,7 @@ import { useEnrollments } from "./useEnrollments";
 // Re-export from models for backward compatibility
 export * from "../models/types";
 export * from "../models/constants";
-export { STUDENTS, SUPPLIERS, PAYMENTS, BILLS, TRANSACTIONS, ENROLLMENTS } from "../models/mockData";
+export { STUDENTS, SUPPLIERS, PAYMENTS, BILLS, TRANSACTIONS, ENROLLMENTS, MODALITIES, CLASSES } from "../models/mockData";
 
 // Main hook that combines all finance data hooks
 export const useFinanceData = () => {

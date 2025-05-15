@@ -42,6 +42,16 @@ export const EXPENSE_CATEGORIES = [
   "Outros"
 ];
 
+export const INCOME_CATEGORIES = [
+  "Mensalidade",
+  "Matrícula",
+  "Venda de Produtos",
+  "Eventos",
+  "Patrocínios",
+  "Doações",
+  "Outros"
+];
+
 export const MODALITY_TYPES = [
   "Ballet",
   "Jazz",

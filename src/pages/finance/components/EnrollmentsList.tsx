@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Edit, Trash2, CheckCircle, XCircle } from 'lucide-react';
+import { Edit, Trash2, XCircle } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -72,7 +72,9 @@ export const EnrollmentsList = ({
 
   // Ordenar matrículas por data (mais recentes primeiro)
   const sortedEnrollments = [...filteredEnrollments].sort((a, b) => {
-    return new Date(b.date).getTime() - new Date(a.date).getTime();
+    const dateA = a.date || a.enrollmentDate;
+    const dateB = b.date || b.enrollmentDate;
+    return new Date(dateB).getTime() - new Date(dateA).getTime();
   });
 
   const formatDate = (dateString: string) => {
@@ -80,7 +82,8 @@ export const EnrollmentsList = ({
     return date.toLocaleDateString('pt-BR');
   };
 
-  const formatCurrency = (value: number) => {
+  const formatCurrency = (value: number | undefined) => {
+    if (value === undefined) return "R$ 0,00";
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL'
@@ -146,11 +149,11 @@ export const EnrollmentsList = ({
                     )}
                   >
                     <TableCell>{enrollment.studentName}</TableCell>
-                    <TableCell>{enrollment.modalityName}</TableCell>
-                    <TableCell>{enrollment.className}</TableCell>
-                    <TableCell>{formatDate(enrollment.date)}</TableCell>
+                    <TableCell>{enrollment.modalityName || enrollment.modality}</TableCell>
+                    <TableCell>{enrollment.className || enrollment.class}</TableCell>
+                    <TableCell>{formatDate(enrollment.date || enrollment.enrollmentDate)}</TableCell>
                     <TableCell>
-                      {formatCurrency(enrollment.value)}
+                      {formatCurrency(enrollment.value || enrollment.enrollmentFee)}
                       {enrollment.installments && enrollment.installments > 1 && (
                         <div className="text-xs text-muted-foreground">
                           {enrollment.installments} parcelas
