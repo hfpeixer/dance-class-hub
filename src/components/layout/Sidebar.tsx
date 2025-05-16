@@ -43,8 +43,8 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
     className={cn(
       "flex items-center space-x-3 p-3 rounded-md transition-all duration-200",
       isActive
-        ? "bg-sidebar-accent text-sidebar-accent-foreground"
-        : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
+        ? "bg-purple-400 text-white"
+        : "text-sidebar-foreground/80 hover:bg-purple-200/50 hover:text-purple-700"
     )}
   >
     <Icon className="h-5 w-5 flex-shrink-0" />
@@ -86,11 +86,11 @@ export const Sidebar: React.FC = () => {
       <div className="flex h-16 items-center justify-between px-4">
         {!isCollapsed && (
           <Link to="/" className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-full bg-dance-primary flex items-center justify-center">
+            <div className="h-8 w-8 rounded-full bg-purple-400 flex items-center justify-center">
               <Music2 className="h-5 w-5 text-white animate-dance" />
             </div>
             <span className="text-lg font-bold text-sidebar-foreground">
-              Espaço<span className="text-dance-primary">Corpore</span>
+              Espaço<span className="text-purple-400">Corpore</span>
             </span>
           </Link>
         )}
@@ -98,7 +98,7 @@ export const Sidebar: React.FC = () => {
           variant="ghost"
           size="icon"
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
+          className="text-sidebar-foreground hover:bg-purple-200/50 hover:text-purple-700"
         >
           <Menu className="h-5 w-5" />
         </Button>
