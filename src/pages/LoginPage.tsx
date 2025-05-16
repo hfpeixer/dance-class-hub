@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Music2 } from "lucide-react";
@@ -25,7 +24,6 @@ export const LoginPage: React.FC = () => {
       toast({
         title: "Login realizado com sucesso!",
         description: "Bem-vindo ao sistema de gerenciamento da escola de dança.",
-        duration: 3000,
       });
       navigate("/");
     } catch (error) {
@@ -33,7 +31,6 @@ export const LoginPage: React.FC = () => {
         title: "Erro ao fazer login",
         description: error instanceof Error ? error.message : "Credenciais inválidas. Tente novamente.",
         variant: "destructive",
-        duration: 3000,
       });
     } finally {
       setIsLoading(false);

@@ -11,7 +11,11 @@ export * from "../models/types";
 export * from "../models/constants";
 export { STUDENTS, SUPPLIERS, PAYMENTS, BILLS, TRANSACTIONS, ENROLLMENTS, MODALITIES, CLASSES } from "../models/mockData";
 
-// Main hook that combines all finance data hooks
+/**
+ * Main finance data hook combining all finance-related hooks
+ * This hook is designed to eventually connect to a real database
+ * and replace the mock data with actual database queries
+ */
 export const useFinanceData = () => {
   const [isLoading, setIsLoading] = useState(false);
   
@@ -23,15 +27,23 @@ export const useFinanceData = () => {
 
   // Check for overdue payments and bills on component mount and when data changes
   useEffect(() => {
-    // Simulate loading data from an API
+    // This would be replaced with real database queries when implemented
     setIsLoading(true);
     
+    // Update statuses (in the future, this would pull from a database)
     paymentsHook.updatePaymentStatuses();
     billsHook.updateBillStatuses();
     
+    // Simulating API call delay
     setTimeout(() => {
       setIsLoading(false);
     }, 500);
+    
+    // When migrating to a real database:
+    // 1. Replace mock data imports with database queries
+    // 2. Implement proper error handling for database operations
+    // 3. Add caching strategies for frequently accessed data
+    // 4. Implement real-time updates using subscriptions if available
   }, []);
 
   // Combine all hooks into a single object
