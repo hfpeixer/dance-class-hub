@@ -13,11 +13,12 @@ export { STUDENTS, SUPPLIERS, PAYMENTS, BILLS, TRANSACTIONS, ENROLLMENTS, MODALI
 
 /**
  * Main finance data hook combining all finance-related hooks
- * This hook is designed to eventually connect to a real database
+ * This hook is designed to connect to a real database
  * and replace the mock data with actual database queries
  */
 export const useFinanceData = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
   
   const studentsHook = useStudents();
   const paymentsHook = usePayments();
@@ -27,23 +28,36 @@ export const useFinanceData = () => {
 
   // Check for overdue payments and bills on component mount and when data changes
   useEffect(() => {
-    // This would be replaced with real database queries when implemented
+    // This will be replaced with real database queries when implemented
     setIsLoading(true);
+    setError(null);
     
-    // Update statuses (in the future, this would pull from a database)
-    paymentsHook.updatePaymentStatuses();
-    billsHook.updateBillStatuses();
-    
-    // Simulating API call delay
-    setTimeout(() => {
+    try {
+      // Update statuses (in the future, this would pull from a database)
+      paymentsHook.updatePaymentStatuses();
+      billsHook.updateBillStatuses();
+      
+      // When connected to a real database, this is where we would fetch data
+      // and update the respective state variables
+      
+      // Simulating API call delay
+      const timer = setTimeout(() => {
+        setIsLoading(false);
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('An unknown error occurred'));
       setIsLoading(false);
-    }, 500);
+    }
     
-    // When migrating to a real database:
-    // 1. Replace mock data imports with database queries
+    // Database integration TODO:
+    // 1. Replace mock data imports with database queries using an API client
     // 2. Implement proper error handling for database operations
     // 3. Add caching strategies for frequently accessed data
-    // 4. Implement real-time updates using subscriptions if available
+    // 4. Implement real-time updates using WebSockets or subscriptions if available
+    // 5. Add pagination for large datasets
+    // 6. Implement proper authentication and authorization checks
   }, []);
 
   // Combine all hooks into a single object
@@ -53,6 +67,7 @@ export const useFinanceData = () => {
     ...billsHook,
     ...transactionsHook,
     ...enrollmentsHook,
-    isLoading
+    isLoading,
+    error
   };
 };
