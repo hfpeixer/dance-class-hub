@@ -9,7 +9,387 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      bills: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string
+          document_number: string | null
+          due_date: string
+          id: string
+          installment_number: number | null
+          notes: string | null
+          payment_date: string | null
+          status: string
+          supplier: string
+          total_installments: number | null
+          value: number
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description: string
+          document_number?: string | null
+          due_date: string
+          id?: string
+          installment_number?: number | null
+          notes?: string | null
+          payment_date?: string | null
+          status?: string
+          supplier: string
+          total_installments?: number | null
+          value: number
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string
+          document_number?: string | null
+          due_date?: string
+          id?: string
+          installment_number?: number | null
+          notes?: string | null
+          payment_date?: string | null
+          status?: string
+          supplier?: string
+          total_installments?: number | null
+          value?: number
+        }
+        Relationships: []
+      }
+      classes: {
+        Row: {
+          created_at: string
+          current_students: number | null
+          id: string
+          max_students: number | null
+          modality_id: string
+          name: string
+          schedule: string
+          teacher: string | null
+        }
+        Insert: {
+          created_at?: string
+          current_students?: number | null
+          id?: string
+          max_students?: number | null
+          modality_id: string
+          name: string
+          schedule: string
+          teacher?: string | null
+        }
+        Update: {
+          created_at?: string
+          current_students?: number | null
+          id?: string
+          max_students?: number | null
+          modality_id?: string
+          name?: string
+          schedule?: string
+          teacher?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "classes_modality_id_fkey"
+            columns: ["modality_id"]
+            isOneToOne: false
+            referencedRelation: "modalities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      enrollments: {
+        Row: {
+          class_id: string
+          created_at: string
+          enrollment_date: string
+          enrollment_fee: number
+          id: string
+          modality_id: string
+          monthly_fee: number
+          notes: string | null
+          payment_day: number
+          status: string
+          student_id: string
+        }
+        Insert: {
+          class_id: string
+          created_at?: string
+          enrollment_date?: string
+          enrollment_fee: number
+          id?: string
+          modality_id: string
+          monthly_fee: number
+          notes?: string | null
+          payment_day: number
+          status?: string
+          student_id: string
+        }
+        Update: {
+          class_id?: string
+          created_at?: string
+          enrollment_date?: string
+          enrollment_fee?: number
+          id?: string
+          modality_id?: string
+          monthly_fee?: number
+          notes?: string | null
+          payment_day?: number
+          status?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "enrollments_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "enrollments_modality_id_fkey"
+            columns: ["modality_id"]
+            isOneToOne: false
+            referencedRelation: "modalities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "enrollments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      modalities: {
+        Row: {
+          created_at: string
+          description: string | null
+          enrollment_fee: number
+          id: string
+          monthly_fee: number
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          enrollment_fee: number
+          id?: string
+          monthly_fee: number
+          name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          enrollment_fee?: number
+          id?: string
+          monthly_fee?: number
+          name?: string
+        }
+        Relationships: []
+      }
+      payments: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string
+          due_date: string
+          enrollment_id: string | null
+          id: string
+          installment_number: number | null
+          method: string | null
+          notes: string | null
+          payment_date: string | null
+          status: string
+          student_id: string
+          total_installments: number | null
+          value: number
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description: string
+          due_date: string
+          enrollment_id?: string | null
+          id?: string
+          installment_number?: number | null
+          method?: string | null
+          notes?: string | null
+          payment_date?: string | null
+          status?: string
+          student_id: string
+          total_installments?: number | null
+          value: number
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string
+          due_date?: string
+          enrollment_id?: string | null
+          id?: string
+          installment_number?: number | null
+          method?: string | null
+          notes?: string | null
+          payment_date?: string | null
+          status?: string
+          student_id?: string
+          total_installments?: number | null
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "enrollments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      students: {
+        Row: {
+          address: string | null
+          age: number | null
+          birthday: string | null
+          city_state: string | null
+          class: string | null
+          created_at: string
+          email: string | null
+          enrollment_date: string | null
+          id: string
+          modality: string | null
+          name: string
+          notes: string | null
+          parent_cpf: string | null
+          parent_name: string | null
+          parent_phone: string | null
+          phone: string | null
+          status: string
+          zip_code: string | null
+        }
+        Insert: {
+          address?: string | null
+          age?: number | null
+          birthday?: string | null
+          city_state?: string | null
+          class?: string | null
+          created_at?: string
+          email?: string | null
+          enrollment_date?: string | null
+          id?: string
+          modality?: string | null
+          name: string
+          notes?: string | null
+          parent_cpf?: string | null
+          parent_name?: string | null
+          parent_phone?: string | null
+          phone?: string | null
+          status?: string
+          zip_code?: string | null
+        }
+        Update: {
+          address?: string | null
+          age?: number | null
+          birthday?: string | null
+          city_state?: string | null
+          class?: string | null
+          created_at?: string
+          email?: string | null
+          enrollment_date?: string | null
+          id?: string
+          modality?: string | null
+          name?: string
+          notes?: string | null
+          parent_cpf?: string | null
+          parent_name?: string | null
+          parent_phone?: string | null
+          phone?: string | null
+          status?: string
+          zip_code?: string | null
+        }
+        Relationships: []
+      }
+      suppliers: {
+        Row: {
+          address: string | null
+          category: string | null
+          contact_person: string | null
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          phone: string | null
+        }
+        Insert: {
+          address?: string | null
+          category?: string | null
+          contact_person?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+        }
+        Update: {
+          address?: string | null
+          category?: string | null
+          contact_person?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          amount: number
+          category: string | null
+          created_at: string
+          date: string
+          description: string
+          id: string
+          notes: string | null
+          payment_method: string | null
+          related_to: string | null
+          type: string
+        }
+        Insert: {
+          amount: number
+          category?: string | null
+          created_at?: string
+          date: string
+          description: string
+          id?: string
+          notes?: string | null
+          payment_method?: string | null
+          related_to?: string | null
+          type: string
+        }
+        Update: {
+          amount?: number
+          category?: string | null
+          created_at?: string
+          date?: string
+          description?: string
+          id?: string
+          notes?: string | null
+          payment_method?: string | null
+          related_to?: string | null
+          type?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
