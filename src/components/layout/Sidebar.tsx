@@ -131,12 +131,12 @@ export function Sidebar({ className }: SidebarProps) {
         </button>
 
         {isOpen && (
-          <div className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm">
+          <div className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm animate-in fade-in">
             <div
               className="fixed inset-0 bg-black/20"
               onClick={closeSidebar}
             />
-            <div className="fixed inset-y-0 left-0 z-50 w-[240px]">
+            <div className="fixed inset-y-0 left-0 z-50 w-[240px] animate-in slide-in-from-left">
               <div className="flex items-center justify-between p-4 border-b border-border">
                 <h2 className="text-lg font-semibold">Corpore</h2>
                 <button onClick={closeSidebar} aria-label="Close menu">
