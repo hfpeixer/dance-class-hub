@@ -19,29 +19,28 @@ import SchoolsPage from "./pages/schools/SchoolsPage";
 
 function App() {
   return (
-    <>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
 
-        <Route element={<Layout />}>
-          <Route path="/" element={<Index />} />
-          <Route path="/alunos" element={<StudentsPage />} />
-          <Route path="/professores" element={<TeachersPage />} />
-          <Route path="/turmas" element={<ClassesPage />} />
-          <Route path="/modalidades" element={<ModalitiesPage />} />
-          <Route path="/produtos" element={<ProductsPage />} />
-          <Route path="/financeiro" element={<FinancePage />} />
-          <Route path="/matriculas" element={<EnrollmentsPage />} />
-          <Route path="/eventos" element={<EventsPage />} />
-          <Route path="/relatorios" element={<ReportsPage />} />
-          <Route path="/configuracoes" element={<SettingsPage />} />
-          <Route path="/admin" element={<AdminPage />} />
-          <Route path="/escolas" element={<SchoolsPage />} />
-        </Route>
+      <Route element={<Layout />}>
+        <Route index element={<Index />} />
+        <Route path="/" element={<Index />} />
+        <Route path="/alunos" element={<StudentsPage />} />
+        <Route path="/professores" element={<TeachersPage />} />
+        <Route path="/turmas" element={<ClassesPage />} />
+        <Route path="/modalidades" element={<ModalitiesPage />} />
+        <Route path="/produtos" element={<ProductsPage />} />
+        <Route path="/financeiro" element={<FinancePage />} />
+        <Route path="/matriculas" element={<EnrollmentsPage />} />
+        <Route path="/eventos" element={<EventsPage />} />
+        <Route path="/relatorios" element={<ReportsPage />} />
+        <Route path="/configuracoes" element={<SettingsPage />} />
+        <Route path="/admin" element={<AdminPage />} />
+        <Route path="/escolas" element={<SchoolsPage />} />
+      </Route>
 
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </>
+      <Route path="*" element={<NotFound />} />
+    </Routes>
   );
 }
 

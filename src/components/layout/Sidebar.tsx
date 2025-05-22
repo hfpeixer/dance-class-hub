@@ -143,7 +143,9 @@ export function Sidebar({ className }: SidebarProps) {
                   <X className="h-5 w-5" />
                 </button>
               </div>
-              <div className="overflow-y-auto h-[calc(100%-60px)]">{sidebarContent}</div>
+              <div className="overflow-y-auto h-[calc(100%-60px)] bg-card">
+                {sidebarContent}
+              </div>
             </div>
           </div>
         )}
