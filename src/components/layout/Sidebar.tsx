@@ -2,141 +2,241 @@
 import React, { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
+  BarChart3,
   Users,
   School,
-  CalendarRange,
-  DollarSign,
-  Package,
-  Settings,
-  MenuIcon,
-  X,
-  Home,
+  Music2,
   UserCheck,
-  BookUser,
-  Package2,
-  List,
-  ScanBarcode,
-  ClipboardList,
-  FileText,
+  BookOpen,
+  DollarSign,
+  ShoppingBag,
   Calendar,
+  Settings,
+  Menu,
+  ChevronRight,
+  LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
 
-interface SidebarProps {
-  className?: string;
-}
-
-interface SidebarLinkProps {
-  to: string;
+interface SidebarItemProps {
   icon: React.ElementType;
-  children: React.ReactNode;
-  end?: boolean;
+  label: string;
+  href: string;
+  isActive: boolean;
+  isCollapsed: boolean;
+  onClick?: () => void;
 }
 
-const SidebarLink = ({ to, icon: Icon, children, end }: SidebarLinkProps) => {
+const SidebarItem: React.FC<SidebarItemProps> = ({
+  icon: Icon,
+  label,
+  href,
+  isActive,
+  isCollapsed,
+  onClick,
+}) => (
+  <NavLink
+    to={href}
+    onClick={onClick}
+    className={cn(
+      "flex items-center space-x-3 p-3 rounded-md transition-all duration-200",
+      isActive
+        ? "bg-dance-primary text-white"
+        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+    )}
+  >
+    <Icon className="h-5 w-5 flex-shrink-0" />
+    {!isCollapsed && <span className="text-sm font-medium">{label}</span>}
+  </NavLink>
+);
+
+interface SidebarSectionProps {
+  title: string;
+  isCollapsed: boolean;
+  children: React.ReactNode;
+}
+
+const SidebarSection: React.FC<SidebarSectionProps> = ({ title, isCollapsed, children }) => (
+  <div className="mb-6">
+    {!isCollapsed && (
+      <h3 className="mb-2 px-3 text-xs uppercase text-muted-foreground">
+        {title}
+      </h3>
+    )}
+    <div className="space-y-1">{children}</div>
+  </div>
+);
+
+export function Sidebar() {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const { user, logout, hasPermission } = useAuth();
   const location = useLocation();
-  const isActive = end
-    ? location.pathname === to
-    : location.pathname.startsWith(to);
-
-  return (
-    <NavLink
-      to={to}
-      className={({ isActive }) =>
-        cn(
-          "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
-          isActive
-            ? "bg-dance-primary text-white"
-            : "text-muted-foreground hover:bg-muted hover:text-foreground"
-        )
-      }
-      end={end}
-    >
-      <Icon className="h-4 w-4" />
-      <span>{children}</span>
-    </NavLink>
-  );
-};
-
-export function Sidebar({ className }: SidebarProps) {
-  const isMobile = useIsMobile();
+  const isMobile = window.innerWidth < 768;
   const [isOpen, setIsOpen] = useState(false);
 
-  const toggleSidebar = () => setIsOpen((prev) => !prev);
-  const closeSidebar = () => setIsOpen(false);
+  const toggleMobileSidebar = () => setIsOpen(!isOpen);
+  const closeMobileSidebar = () => setIsOpen(false);
+  
+  if (!user) return null; // Don't render if not logged in
 
   const sidebarContent = (
     <>
-      <div className="flex h-14 items-center border-b border-border px-4">
-        <h2 className="text-lg font-semibold">Corpore</h2>
+      <div className="flex h-16 items-center justify-between px-4 border-b border-border">
+        {!isCollapsed && (
+          <NavLink to="/" className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-full bg-dance-primary flex items-center justify-center">
+              <Music2 className="h-5 w-5 text-white animate-dance" />
+            </div>
+            <span className="text-lg font-bold">
+              Corpore<span className="text-dance-primary">Dance</span>
+            </span>
+          </NavLink>
+        )}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className="text-muted-foreground hover:bg-muted hover:text-foreground"
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
       </div>
-      <div className="flex-1 px-4 py-4">
-        <nav className="flex flex-col gap-1">
-          <SidebarLink to="/" icon={Home} end>
-            Dashboard
-          </SidebarLink>
-          <SidebarLink to="/alunos" icon={Users}>
-            Alunos
-          </SidebarLink>
-          <SidebarLink to="/professores" icon={UserCheck}>
-            Professores
-          </SidebarLink>
-          <SidebarLink to="/matriculas" icon={List}>
-            Matrículas
-          </SidebarLink>
-          <SidebarLink to="/turmas" icon={BookUser}>
-            Turmas
-          </SidebarLink>
-          <SidebarLink to="/modalidades" icon={School}>
-            Modalidades
-          </SidebarLink>
-          <SidebarLink to="/eventos" icon={Calendar}>
-            Eventos
-          </SidebarLink>
-          <SidebarLink to="/produtos" icon={Package}>
-            Produtos
-          </SidebarLink>
-          <SidebarLink to="/financeiro" icon={DollarSign}>
-            Financeiro
-          </SidebarLink>
-          <SidebarLink to="/relatorios" icon={FileText}>
-            Relatórios
-          </SidebarLink>
-          <SidebarLink to="/configuracoes" icon={Settings}>
-            Configurações
-          </SidebarLink>
-        </nav>
+
+      <div className="px-3 py-4 space-y-4 overflow-y-auto max-h-[calc(100vh-4rem)]">
+        <SidebarSection title="Analytics" isCollapsed={isCollapsed}>
+          <SidebarItem
+            icon={BarChart3}
+            label="Dashboard"
+            href="/"
+            isActive={location.pathname === "/"}
+            isCollapsed={isCollapsed}
+          />
+        </SidebarSection>
+
+        {hasPermission("students.manage") && (
+          <SidebarSection title="Cadastros" isCollapsed={isCollapsed}>
+            <SidebarItem
+              icon={Users}
+              label="Alunos"
+              href="/alunos"
+              isActive={location.pathname.startsWith("/alunos")}
+              isCollapsed={isCollapsed}
+            />
+            <SidebarItem
+              icon={School}
+              label="Escolas"
+              href="/escolas"
+              isActive={location.pathname.startsWith("/escolas")}
+              isCollapsed={isCollapsed}
+            />
+            <SidebarItem
+              icon={Music2}
+              label="Modalidades"
+              href="/modalidades"
+              isActive={location.pathname.startsWith("/modalidades")}
+              isCollapsed={isCollapsed}
+            />
+            {hasPermission("teachers.manage") && (
+              <SidebarItem
+                icon={UserCheck}
+                label="Professores"
+                href="/professores"
+                isActive={location.pathname.startsWith("/professores")}
+                isCollapsed={isCollapsed}
+              />
+            )}
+            <SidebarItem
+              icon={BookOpen}
+              label="Turmas"
+              href="/turmas"
+              isActive={location.pathname.startsWith("/turmas")}
+              isCollapsed={isCollapsed}
+            />
+          </SidebarSection>
+        )}
+
+        {hasPermission("finance.manage") && (
+          <SidebarSection title="Financeiro" isCollapsed={isCollapsed}>
+            <SidebarItem
+              icon={DollarSign}
+              label="Mensalidades"
+              href="/financeiro"
+              isActive={location.pathname === "/financeiro"}
+              isCollapsed={isCollapsed}
+            />
+            <SidebarItem
+              icon={ShoppingBag}
+              label="Produtos"
+              href="/produtos"
+              isActive={location.pathname.startsWith("/produtos")}
+              isCollapsed={isCollapsed}
+            />
+            <SidebarItem
+              icon={Calendar}
+              label="Eventos"
+              href="/eventos"
+              isActive={location.pathname.startsWith("/eventos")}
+              isCollapsed={isCollapsed}
+            />
+          </SidebarSection>
+        )}
+
+        {hasPermission("dashboard.view") && (
+          <SidebarSection title="Sistema" isCollapsed={isCollapsed}>
+            <SidebarItem
+              icon={Settings}
+              label="Configurações"
+              href="/configuracoes"
+              isActive={location.pathname.startsWith("/configuracoes")}
+              isCollapsed={isCollapsed}
+            />
+            <SidebarItem
+              icon={LogOut}
+              label="Sair"
+              href="#"
+              isActive={false}
+              isCollapsed={isCollapsed}
+              onClick={() => logout()}
+            />
+          </SidebarSection>
+        )}
       </div>
-      <div className="px-4 py-2 border-t border-border text-xs text-muted-foreground">
+
+      <div className="px-4 py-2 border-t border-border text-xs text-muted-foreground mt-auto">
         <p>© 2024 Corpore - v1.0.0</p>
       </div>
     </>
   );
 
+  // Mobile sidebar
   if (isMobile) {
     return (
       <>
         <button
           className="fixed left-4 top-4 z-50"
-          onClick={toggleSidebar}
+          onClick={toggleMobileSidebar}
           aria-label="Toggle menu"
         >
-          <MenuIcon className="h-6 w-6" />
+          <Menu className="h-6 w-6" />
         </button>
 
         {isOpen && (
           <div className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm animate-in fade-in">
             <div
               className="fixed inset-0 bg-black/20"
-              onClick={closeSidebar}
+              onClick={closeMobileSidebar}
             />
             <div className="fixed inset-y-0 left-0 z-50 animate-in slide-in-from-left duration-300">
-              <div className="flex h-full w-[240px] flex-col bg-card">
+              <div className={cn(
+                "flex h-full flex-col bg-card",
+                isCollapsed ? "w-16" : "w-64"
+              )}>
                 <div className="flex items-center justify-between p-4 border-b border-border">
                   <h2 className="text-lg font-semibold">Corpore</h2>
-                  <button onClick={closeSidebar} aria-label="Close menu">
-                    <X className="h-5 w-5" />
+                  <button onClick={closeMobileSidebar} aria-label="Close menu">
+                    <LogOut className="h-5 w-5" />
                   </button>
                 </div>
                 <div className="overflow-y-auto flex-1">
@@ -150,14 +250,15 @@ export function Sidebar({ className }: SidebarProps) {
     );
   }
 
+  // Desktop sidebar
   return (
-    <div
+    <aside
       className={cn(
-        "flex flex-col gap-6 w-[240px] h-full bg-card border-r border-border animate-in duration-300",
-        className
+        "h-full bg-card border-r border-border transition-all duration-300",
+        isCollapsed ? "w-16" : "w-64"
       )}
     >
       {sidebarContent}
-    </div>
+    </aside>
   );
 }
