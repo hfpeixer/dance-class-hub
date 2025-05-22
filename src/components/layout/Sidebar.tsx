@@ -21,7 +21,7 @@ import {
   Calendar,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface SidebarProps {
   className?: string;
@@ -60,7 +60,7 @@ const SidebarLink = ({ to, icon: Icon, children, end }: SidebarLinkProps) => {
 };
 
 export function Sidebar({ className }: SidebarProps) {
-  const { isMobile } = useMobile();
+  const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleSidebar = () => setIsOpen((prev) => !prev);
