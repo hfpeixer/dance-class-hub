@@ -67,16 +67,11 @@ export function Sidebar({ className }: SidebarProps) {
   const closeSidebar = () => setIsOpen(false);
 
   const sidebarContent = (
-    <div
-      className={cn(
-        "flex flex-col gap-6 w-[240px] h-full bg-card border-r border-border",
-        className
-      )}
-    >
+    <>
       <div className="flex h-14 items-center border-b border-border px-4">
         <h2 className="text-lg font-semibold">Corpore</h2>
       </div>
-      <div className="flex-1 px-4">
+      <div className="flex-1 px-4 py-4">
         <nav className="flex flex-col gap-1">
           <SidebarLink to="/" icon={Home} end>
             Dashboard
@@ -116,7 +111,7 @@ export function Sidebar({ className }: SidebarProps) {
       <div className="px-4 py-2 border-t border-border text-xs text-muted-foreground">
         <p>© 2024 Corpore - v1.0.0</p>
       </div>
-    </div>
+    </>
   );
 
   if (isMobile) {
@@ -136,15 +131,17 @@ export function Sidebar({ className }: SidebarProps) {
               className="fixed inset-0 bg-black/20"
               onClick={closeSidebar}
             />
-            <div className="fixed inset-y-0 left-0 z-50 w-[240px] animate-in slide-in-from-left">
-              <div className="flex items-center justify-between p-4 border-b border-border">
-                <h2 className="text-lg font-semibold">Corpore</h2>
-                <button onClick={closeSidebar} aria-label="Close menu">
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-              <div className="overflow-y-auto h-[calc(100%-60px)] bg-card">
-                {sidebarContent}
+            <div className="fixed inset-y-0 left-0 z-50 animate-in slide-in-from-left duration-300">
+              <div className="flex h-full w-[240px] flex-col bg-card">
+                <div className="flex items-center justify-between p-4 border-b border-border">
+                  <h2 className="text-lg font-semibold">Corpore</h2>
+                  <button onClick={closeSidebar} aria-label="Close menu">
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+                <div className="overflow-y-auto flex-1">
+                  {sidebarContent}
+                </div>
               </div>
             </div>
           </div>
@@ -153,5 +150,14 @@ export function Sidebar({ className }: SidebarProps) {
     );
   }
 
-  return sidebarContent;
+  return (
+    <div
+      className={cn(
+        "flex flex-col gap-6 w-[240px] h-full bg-card border-r border-border animate-in duration-300",
+        className
+      )}
+    >
+      {sidebarContent}
+    </div>
+  );
 }
