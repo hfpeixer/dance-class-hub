@@ -13,8 +13,7 @@ export { STUDENTS, SUPPLIERS, PAYMENTS, BILLS, TRANSACTIONS, ENROLLMENTS, MODALI
 
 /**
  * Main finance data hook combining all finance-related hooks
- * This hook is designed to connect to a real database
- * and replace the mock data with actual database queries
+ * Uses real Supabase database connections
  */
 export const useFinanceData = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -26,39 +25,29 @@ export const useFinanceData = () => {
   const transactionsHook = useTransactions();
   const enrollmentsHook = useEnrollments();
 
-  // Check for overdue payments and bills on component mount and when data changes
+  // Determine overall loading state and errors
   useEffect(() => {
-    // This will be replaced with real database queries when implemented
-    setIsLoading(true);
-    setError(null);
+    const loading = 
+      studentsHook.isLoading || 
+      paymentsHook.isLoading || 
+      billsHook.isLoading || 
+      transactionsHook.isLoading || 
+      enrollmentsHook.isLoading;
     
-    try {
-      // Update statuses (in the future, this would pull from a database)
-      paymentsHook.updatePaymentStatuses();
-      billsHook.updateBillStatuses();
-      
-      // When connected to a real database, this is where we would fetch data
-      // and update the respective state variables
-      
-      // Simulating API call delay
-      const timer = setTimeout(() => {
-        setIsLoading(false);
-      }, 500);
-      
-      return () => clearTimeout(timer);
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('An unknown error occurred'));
-      setIsLoading(false);
-    }
+    setIsLoading(loading);
     
-    // Database integration TODO:
-    // 1. Replace mock data imports with database queries using an API client
-    // 2. Implement proper error handling for database operations
-    // 3. Add caching strategies for frequently accessed data
-    // 4. Implement real-time updates using WebSockets or subscriptions if available
-    // 5. Add pagination for large datasets
-    // 6. Implement proper authentication and authorization checks
-  }, []);
+    const firstError = 
+      studentsHook.error || 
+      paymentsHook.error || 
+      billsHook.error || 
+      transactionsHook.error || 
+      enrollmentsHook.error;
+    
+    setError(firstError);
+  }, [
+    studentsHook.isLoading, paymentsHook.isLoading, billsHook.isLoading, transactionsHook.isLoading, enrollmentsHook.isLoading,
+    studentsHook.error, paymentsHook.error, billsHook.error, transactionsHook.error, enrollmentsHook.error
+  ]);
 
   // Combine all hooks into a single object
   return {

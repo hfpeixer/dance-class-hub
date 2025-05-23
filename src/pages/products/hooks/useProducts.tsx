@@ -1,5 +1,6 @@
 
 import { useState, useEffect, useMemo } from 'react';
+import { toast } from 'sonner';
 
 // Define the product interface
 export interface Product {
@@ -175,6 +176,7 @@ export function useProducts() {
     } as Product;
     
     setProducts(prevProducts => [...prevProducts, newProduct]);
+    toast.success(`Produto ${productData.name} adicionado com sucesso`);
   };
 
   // Update an existing product
@@ -190,11 +192,13 @@ export function useProducts() {
           : product
       )
     );
+    toast.success(`Produto atualizado com sucesso`);
   };
 
   // Delete a product
   const deleteProduct = (id: string) => {
     setProducts(prevProducts => prevProducts.filter(product => product.id !== id));
+    toast.success(`Produto removido com sucesso`);
   };
 
   return {
