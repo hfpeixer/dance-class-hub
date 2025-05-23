@@ -27,18 +27,6 @@ export const EXPENSE_CATEGORIES = [
   "Outros"
 ];
 
-export const INCOME_CATEGORIES = [
-  "Mensalidade",
-  "Matrícula",
-  "Venda de Produtos",
-  "Eventos",
-  "Workshop",
-  "Apresentações",
-  "Patrocínios",
-  "Doações",
-  "Outros"
-];
-
 export const PAYMENT_METHODS = [
   "Dinheiro",
   "Cartão de Crédito",
