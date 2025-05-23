@@ -43,7 +43,10 @@ export function useStudents() {
         .from('students')
         .select('*');
       
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase error fetching students:", error);
+        throw error;
+      }
       
       if (data) {
         const formattedStudents = data.map((student: any) => ({
@@ -90,8 +93,8 @@ export function useStudents() {
       // Filter by search term
       const matchesSearch = 
         student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        student.modality.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        student.class.toLowerCase().includes(searchTerm.toLowerCase());
+        (student.modality && student.modality.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (student.class && student.class.toLowerCase().includes(searchTerm.toLowerCase()));
       
       // Filter by status
       const matchesStatus = 
@@ -113,27 +116,32 @@ export function useStudents() {
         name: studentData.name,
         age: studentData.age,
         modality: studentData.modalities ? studentData.modalities[0] : '',
-        class: studentData.class,
-        status: studentData.status,
-        email: studentData.email,
-        phone: studentData.phone,
-        address: studentData.address,
-        city_state: studentData.cityState,
-        zip_code: studentData.zipCode,
-        birthday: studentData.birthday,
-        parent_name: studentData.parentName,
-        parent_phone: studentData.parentPhone,
-        parent_cpf: studentData.parentCPF,
-        enrollment_date: studentData.enrollmentDate,
-        notes: studentData.notes
+        class: studentData.class || '',
+        status: studentData.status || 'active',
+        email: studentData.email || '',
+        phone: studentData.phone || '',
+        address: studentData.address || '',
+        city_state: studentData.cityState || '',
+        zip_code: studentData.zipCode || '',
+        birthday: studentData.birthday || '',
+        parent_name: studentData.parentName || '',
+        parent_phone: studentData.parentPhone || '',
+        parent_cpf: studentData.parentCPF || '',
+        enrollment_date: studentData.enrollmentDate || '',
+        notes: studentData.notes || ''
       };
+      
+      console.log("Inserting student data:", dbStudent);
       
       const { data, error } = await supabase
         .from('students')
         .insert(dbStudent)
         .select();
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error adding student:", error);
+        throw error;
+      }
       
       if (data && data.length > 0) {
         const newStudent = {
@@ -143,21 +151,22 @@ export function useStudents() {
           modality: data[0].modality || '',
           class: data[0].class || '',
           status: data[0].status as 'active' | 'inactive',
-          email: data[0].email,
-          phone: data[0].phone,
-          address: data[0].address,
-          cityState: data[0].city_state,
-          zipCode: data[0].zip_code,
-          birthday: data[0].birthday,
-          parentName: data[0].parent_name,
-          parentPhone: data[0].parent_phone,
-          parentCPF: data[0].parent_cpf,
-          enrollmentDate: data[0].enrollment_date,
-          notes: data[0].notes,
+          email: data[0].email || '',
+          phone: data[0].phone || '',
+          address: data[0].address || '',
+          cityState: data[0].city_state || '',
+          zipCode: data[0].zip_code || '',
+          birthday: data[0].birthday || '',
+          parentName: data[0].parent_name || '',
+          parentPhone: data[0].parent_phone || '',
+          parentCPF: data[0].parent_cpf || '',
+          enrollmentDate: data[0].enrollment_date || '',
+          notes: data[0].notes || '',
           modalities: data[0].modality ? [data[0].modality] : []
         };
         
         setStudents(prevStudents => [...prevStudents, newStudent]);
+        toast.success("Aluno adicionado com sucesso!");
       }
     } catch (err) {
       console.error("Error adding student:", err);
@@ -196,12 +205,17 @@ export function useStudents() {
       }
       if (studentData.class !== undefined) dbStudent.class = studentData.class;
       
+      console.log("Updating student with ID:", id, "Data:", dbStudent);
+      
       const { error } = await supabase
         .from('students')
         .update(dbStudent)
         .eq('id', id);
       
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase error updating student:", error);
+        throw error;
+      }
       
       // Update local state
       setStudents(prevStudents => 
@@ -217,6 +231,8 @@ export function useStudents() {
           return student;
         })
       );
+      
+      toast.success("Aluno atualizado com sucesso!");
     } catch (err) {
       console.error("Error updating student:", err);
       toast.error("Erro ao atualizar aluno");
@@ -230,14 +246,20 @@ export function useStudents() {
     setIsLoading(true);
     
     try {
+      console.log("Deleting student with ID:", id);
+      
       const { error } = await supabase
         .from('students')
         .delete()
         .eq('id', id);
       
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase error deleting student:", error);
+        throw error;
+      }
       
       setStudents(prevStudents => prevStudents.filter(student => student.id !== id));
+      toast.success("Aluno removido com sucesso!");
     } catch (err) {
       console.error("Error deleting student:", err);
       toast.error("Erro ao excluir aluno");
@@ -255,13 +277,18 @@ export function useStudents() {
       
       const newStatus = student.status === 'active' ? 'inactive' : 'active';
       
+      console.log("Toggling student status:", id, "to", newStatus);
+      
       // Update in Supabase
       const { error } = await supabase
         .from('students')
         .update({ status: newStatus })
         .eq('id', id);
       
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase error toggling status:", error);
+        throw error;
+      }
       
       // Update local state
       setStudents(prevStudents => 
@@ -271,6 +298,8 @@ export function useStudents() {
             : student
         )
       );
+      
+      toast.success(`Status do aluno alterado para ${newStatus === 'active' ? 'ativo' : 'inativo'}`);
     } catch (err) {
       console.error("Error toggling student status:", err);
       toast.error("Erro ao alterar status do aluno");

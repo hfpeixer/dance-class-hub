@@ -2,6 +2,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { v4 as uuidv4 } from 'uuid';
 
 // Define the event interface
 export interface Event {
@@ -30,9 +31,8 @@ export function useEvents() {
     setError(null);
     
     try {
-      // In the future, this table will need to be created in Supabase
-      // For now, simulate API call delay with mock data
-      // This will be replaced once the events table is created in Supabase
+      // Note: Currently using local state since events table hasn't been created yet
+      // This will be replaced with actual Supabase queries once the events table is created
       
       setTimeout(() => {
         const mockEvents: Event[] = [
@@ -88,10 +88,10 @@ export function useEvents() {
 
   // Add a new event
   const addEvent = (eventData: Omit<Event, 'id'>) => {
-    // In the future, this will be replaced with a Supabase insert
+    // Will be replaced with Supabase insert when events table is created
     const newEvent = {
       ...eventData,
-      id: Math.random().toString(36).substring(2, 11)
+      id: uuidv4()
     };
     
     setEvents(prevEvents => [...prevEvents, newEvent]);
@@ -101,7 +101,7 @@ export function useEvents() {
 
   // Update an existing event
   const updateEvent = (id: string, eventData: Partial<Event>) => {
-    // In the future, this will be replaced with a Supabase update
+    // Will be replaced with Supabase update when events table is created
     setEvents(prevEvents => 
       prevEvents.map(event => 
         event.id === id ? { ...event, ...eventData } : event
@@ -112,7 +112,7 @@ export function useEvents() {
 
   // Delete an event
   const deleteEvent = (id: string) => {
-    // In the future, this will be replaced with a Supabase delete
+    // Will be replaced with Supabase delete when events table is created
     setEvents(prevEvents => prevEvents.filter(event => event.id !== id));
     toast.success(`Evento removido com sucesso`);
   };
