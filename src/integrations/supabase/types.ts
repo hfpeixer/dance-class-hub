@@ -162,6 +162,48 @@ export type Database = {
           },
         ]
       }
+      events: {
+        Row: {
+          capacity: number | null
+          created_at: string
+          date: string
+          description: string | null
+          id: string
+          location: string
+          notes: string | null
+          status: string
+          ticket_price: number | null
+          time: string | null
+          title: string
+        }
+        Insert: {
+          capacity?: number | null
+          created_at?: string
+          date: string
+          description?: string | null
+          id?: string
+          location: string
+          notes?: string | null
+          status?: string
+          ticket_price?: number | null
+          time?: string | null
+          title: string
+        }
+        Update: {
+          capacity?: number | null
+          created_at?: string
+          date?: string
+          description?: string | null
+          id?: string
+          location?: string
+          notes?: string | null
+          status?: string
+          ticket_price?: number | null
+          time?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
       modalities: {
         Row: {
           created_at: string
@@ -254,6 +296,78 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      products: {
+        Row: {
+          category: string | null
+          cost: number | null
+          created_at: string
+          description: string | null
+          id: string
+          min_stock: number | null
+          name: string
+          price: number
+          status: string
+          stock_quantity: number | null
+        }
+        Insert: {
+          category?: string | null
+          cost?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          min_stock?: number | null
+          name: string
+          price: number
+          status?: string
+          stock_quantity?: number | null
+        }
+        Update: {
+          category?: string | null
+          cost?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          min_stock?: number | null
+          name?: string
+          price?: number
+          status?: string
+          stock_quantity?: number | null
+        }
+        Relationships: []
+      }
+      schools: {
+        Row: {
+          address: string | null
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          phone: string | null
+          principal: string | null
+          status: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+          principal?: string | null
+          status?: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          principal?: string | null
+          status?: string
+        }
+        Relationships: []
       }
       students: {
         Row: {
@@ -348,6 +462,45 @@ export type Database = {
           id?: string
           name?: string
           phone?: string | null
+        }
+        Relationships: []
+      }
+      teachers: {
+        Row: {
+          created_at: string
+          email: string | null
+          hire_date: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          salary: number | null
+          specialties: string[] | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          hire_date?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          salary?: number | null
+          specialties?: string[] | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          hire_date?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          salary?: number | null
+          specialties?: string[] | null
+          status?: string
         }
         Relationships: []
       }
