@@ -339,30 +339,36 @@ export type Database = {
       schools: {
         Row: {
           address: string | null
+          city: string | null
           created_at: string
           email: string | null
           id: string
           name: string
+          neighborhood: string | null
           phone: string | null
           principal: string | null
           status: string
         }
         Insert: {
           address?: string | null
+          city?: string | null
           created_at?: string
           email?: string | null
           id?: string
           name: string
+          neighborhood?: string | null
           phone?: string | null
           principal?: string | null
           status?: string
         }
         Update: {
           address?: string | null
+          city?: string | null
           created_at?: string
           email?: string | null
           id?: string
           name?: string
+          neighborhood?: string | null
           phone?: string | null
           principal?: string | null
           status?: string

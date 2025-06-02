@@ -7,6 +7,8 @@ export interface School {
   id: string;
   name: string;
   address?: string;
+  neighborhood?: string;
+  city?: string;
   phone?: string;
   email?: string;
   principal?: string;
@@ -36,6 +38,8 @@ export const useSchools = () => {
             id: school.id,
             name: school.name,
             address: school.address || '',
+            neighborhood: school.neighborhood || '',
+            city: school.city || '',
             phone: school.phone || '',
             email: school.email || '',
             principal: school.principal || '',
@@ -67,6 +71,8 @@ export const useSchools = () => {
         .insert({
           name: school.name,
           address: school.address,
+          neighborhood: school.neighborhood,
+          city: school.city,
           phone: school.phone,
           email: school.email,
           principal: school.principal,
@@ -81,6 +87,8 @@ export const useSchools = () => {
           id: data[0].id,
           name: data[0].name,
           address: data[0].address || '',
+          neighborhood: data[0].neighborhood || '',
+          city: data[0].city || '',
           phone: data[0].phone || '',
           email: data[0].email || '',
           principal: data[0].principal || '',
@@ -110,6 +118,8 @@ export const useSchools = () => {
         .update({
           name: updatedSchool.name,
           address: updatedSchool.address,
+          neighborhood: updatedSchool.neighborhood,
+          city: updatedSchool.city,
           phone: updatedSchool.phone,
           email: updatedSchool.email,
           principal: updatedSchool.principal,
