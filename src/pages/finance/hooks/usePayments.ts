@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { v4 as uuidv4 } from 'uuid';
 import { Payment } from "../models/types";
@@ -140,11 +139,11 @@ export const usePayments = () => {
     setIsLoading(true);
     
     try {
-      // Convert frontend format to database format
+      // Convert frontend format to database format with proper null handling for dates
       const dbPayment = {
         student_id: payment.studentId,
         value: payment.value,
-        payment_date: payment.date,
+        payment_date: payment.date && payment.date.trim() !== '' ? payment.date : null,
         description: payment.description,
         method: payment.method,
         category: payment.category,
@@ -206,7 +205,9 @@ export const usePayments = () => {
       const dbPayment: any = {};
       
       if (updatedPayment.value !== undefined) dbPayment.value = updatedPayment.value;
-      if (updatedPayment.date !== undefined) dbPayment.payment_date = updatedPayment.date;
+      if (updatedPayment.date !== undefined) {
+        dbPayment.payment_date = updatedPayment.date && updatedPayment.date.trim() !== '' ? updatedPayment.date : null;
+      }
       if (updatedPayment.description !== undefined) dbPayment.description = updatedPayment.description;
       if (updatedPayment.method !== undefined) dbPayment.method = updatedPayment.method;
       if (updatedPayment.category !== undefined) dbPayment.category = updatedPayment.category;

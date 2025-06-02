@@ -111,7 +111,7 @@ export function useStudents() {
     setIsLoading(true);
     
     try {
-      // Convert frontend format to database format
+      // Convert frontend format to database format with proper null handling for dates
       const dbStudent = {
         name: studentData.name,
         age: studentData.age,
@@ -123,11 +123,12 @@ export function useStudents() {
         address: studentData.address || '',
         city_state: studentData.cityState || '',
         zip_code: studentData.zipCode || '',
-        birthday: studentData.birthday || '',
+        // Handle date fields - use null instead of empty string
+        birthday: studentData.birthday && studentData.birthday.trim() !== '' ? studentData.birthday : null,
         parent_name: studentData.parentName || '',
         parent_phone: studentData.parentPhone || '',
         parent_cpf: studentData.parentCPF || '',
-        enrollment_date: studentData.enrollmentDate || '',
+        enrollment_date: studentData.enrollmentDate && studentData.enrollmentDate.trim() !== '' ? studentData.enrollmentDate : null,
         notes: studentData.notes || ''
       };
       
@@ -181,7 +182,7 @@ export function useStudents() {
     setIsLoading(true);
     
     try {
-      // Convert frontend format to database format
+      // Convert frontend format to database format with proper null handling for dates
       const dbStudent: any = {};
       
       if (studentData.name !== undefined) dbStudent.name = studentData.name;
@@ -192,11 +193,15 @@ export function useStudents() {
       if (studentData.address !== undefined) dbStudent.address = studentData.address;
       if (studentData.cityState !== undefined) dbStudent.city_state = studentData.cityState;
       if (studentData.zipCode !== undefined) dbStudent.zip_code = studentData.zipCode;
-      if (studentData.birthday !== undefined) dbStudent.birthday = studentData.birthday;
+      if (studentData.birthday !== undefined) {
+        dbStudent.birthday = studentData.birthday && studentData.birthday.trim() !== '' ? studentData.birthday : null;
+      }
       if (studentData.parentName !== undefined) dbStudent.parent_name = studentData.parentName;
       if (studentData.parentPhone !== undefined) dbStudent.parent_phone = studentData.parentPhone;
       if (studentData.parentCPF !== undefined) dbStudent.parent_cpf = studentData.parentCPF;
-      if (studentData.enrollmentDate !== undefined) dbStudent.enrollment_date = studentData.enrollmentDate;
+      if (studentData.enrollmentDate !== undefined) {
+        dbStudent.enrollment_date = studentData.enrollmentDate && studentData.enrollmentDate.trim() !== '' ? studentData.enrollmentDate : null;
+      }
       if (studentData.notes !== undefined) dbStudent.notes = studentData.notes;
       
       // Update modality if modalities array is provided

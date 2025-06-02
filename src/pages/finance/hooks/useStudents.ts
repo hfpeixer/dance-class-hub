@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { v4 as uuidv4 } from 'uuid';
 import { Student } from "../models/types";
@@ -67,13 +66,13 @@ export const useStudents = () => {
     setIsLoading(true);
     
     try {
-      // Convert frontend format to database format
+      // Convert frontend format to database format with proper null handling for dates
       const dbStudent = {
         name: student.name,
         email: student.email,
         phone: student.phone,
         age: student.age,
-        birthday: student.birthday,
+        birthday: student.birthday && student.birthday.trim() !== '' ? student.birthday : null,
         modality: student.modality,
         class: student.class,
         status: student.status,
@@ -83,7 +82,7 @@ export const useStudents = () => {
         parent_name: student.parentName,
         parent_phone: student.parentPhone,
         parent_cpf: student.parentCPF,
-        enrollment_date: student.enrollmentDate,
+        enrollment_date: student.enrollmentDate && student.enrollmentDate.trim() !== '' ? student.enrollmentDate : null,
         notes: student.notes
       };
       
@@ -132,14 +131,16 @@ export const useStudents = () => {
     setIsLoading(true);
     
     try {
-      // Convert frontend format to database format
+      // Convert frontend format to database format with proper null handling for dates
       const dbStudent: any = {};
       
       if (updatedStudent.name !== undefined) dbStudent.name = updatedStudent.name;
       if (updatedStudent.email !== undefined) dbStudent.email = updatedStudent.email;
       if (updatedStudent.phone !== undefined) dbStudent.phone = updatedStudent.phone;
       if (updatedStudent.age !== undefined) dbStudent.age = updatedStudent.age;
-      if (updatedStudent.birthday !== undefined) dbStudent.birthday = updatedStudent.birthday;
+      if (updatedStudent.birthday !== undefined) {
+        dbStudent.birthday = updatedStudent.birthday && updatedStudent.birthday.trim() !== '' ? updatedStudent.birthday : null;
+      }
       if (updatedStudent.modality !== undefined) dbStudent.modality = updatedStudent.modality;
       if (updatedStudent.class !== undefined) dbStudent.class = updatedStudent.class;
       if (updatedStudent.status !== undefined) dbStudent.status = updatedStudent.status;
@@ -149,7 +150,9 @@ export const useStudents = () => {
       if (updatedStudent.parentName !== undefined) dbStudent.parent_name = updatedStudent.parentName;
       if (updatedStudent.parentPhone !== undefined) dbStudent.parent_phone = updatedStudent.parentPhone;
       if (updatedStudent.parentCPF !== undefined) dbStudent.parent_cpf = updatedStudent.parentCPF;
-      if (updatedStudent.enrollmentDate !== undefined) dbStudent.enrollment_date = updatedStudent.enrollmentDate;
+      if (updatedStudent.enrollmentDate !== undefined) {
+        dbStudent.enrollment_date = updatedStudent.enrollmentDate && updatedStudent.enrollmentDate.trim() !== '' ? updatedStudent.enrollmentDate : null;
+      }
       if (updatedStudent.notes !== undefined) dbStudent.notes = updatedStudent.notes;
       
       const { error } = await supabase

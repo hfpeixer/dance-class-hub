@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { v4 as uuidv4 } from 'uuid';
 import { Enrollment } from "../models/types";
@@ -73,7 +72,7 @@ export const useEnrollments = () => {
     setIsLoading(true);
     
     try {
-      // Convert frontend format to database format
+      // Convert frontend format to database format with proper null handling for dates
       const dbEnrollment = {
         student_id: enrollment.studentId,
         modality_id: enrollment.modality,
