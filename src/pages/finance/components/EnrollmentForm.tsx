@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -24,11 +23,11 @@ import {
 } from "@/components/ui/select";
 import { 
   Enrollment,
-  STUDENTS, 
   MODALITIES, 
   CLASSES, 
   PAYMENT_METHODS 
 } from "../hooks/useFinanceData";
+import { useFinanceData } from "../hooks/useFinanceData";
 
 // Define enrollment schema with zod
 const enrollmentSchema = z.object({
@@ -50,6 +49,7 @@ type EnrollmentFormProps = {
 export const EnrollmentForm = ({ enrollment, onSubmit, onCancel }: EnrollmentFormProps) => {
   const [availableClasses, setAvailableClasses] = useState<typeof CLASSES>([]);
   const [selectedModality, setSelectedModality] = useState<typeof MODALITIES[0] | null>(null);
+  const { students } = useFinanceData();
   
   const form = useForm<z.infer<typeof enrollmentSchema>>({
     resolver: zodResolver(enrollmentSchema),
@@ -111,7 +111,7 @@ export const EnrollmentForm = ({ enrollment, onSubmit, onCancel }: EnrollmentFor
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {STUDENTS.map((student) => (
+                  {students && students.map((student) => (
                     <SelectItem key={student.id} value={student.id}>
                       {student.name}
                     </SelectItem>

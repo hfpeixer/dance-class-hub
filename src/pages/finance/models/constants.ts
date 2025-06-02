@@ -69,5 +69,3 @@ export const CLASSES = [
   { id: "5", name: "Jazz - Sexta 16h e Sábado 10h", modalityId: "4", schedule: "Sexta 16h-17h30 e Sábado 10h-11h30", teacher: "Profa. Daniela", maxStudents: 18, currentStudents: 9 },
   { id: "6", name: "Dança Contemporânea - Segunda e Quarta 19h", modalityId: "5", schedule: "Segunda e Quarta 19h-20h30", teacher: "Prof. Eduardo", maxStudents: 15, currentStudents: 7 }
 ];
-
-export const STUDENTS = [];

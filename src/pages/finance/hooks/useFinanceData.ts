@@ -24,16 +24,6 @@ export const useFinanceData = () => {
   const transactionsHook = useTransactions();
   const enrollmentsHook = useEnrollments();
 
-  // Update the STUDENTS array whenever studentsHook.students changes
-  useEffect(() => {
-    if (studentsHook.students) {
-      // @ts-ignore - This is needed for backward compatibility
-      STUDENTS.length = 0;
-      // @ts-ignore - We're using this array in a special way for component compatibility
-      STUDENTS.push(...studentsHook.students);
-    }
-  }, [studentsHook.students]);
-
   // Determine overall loading state and errors
   useEffect(() => {
     const loading = 

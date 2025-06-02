@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -22,7 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { STUDENTS } from "../hooks/useFinanceData";
+import { useFinanceData } from "../hooks/useFinanceData";
 import { DialogFooter } from "@/components/ui/dialog";
 
 const paymentFormSchema = z.object({
@@ -49,6 +48,8 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
   onSubmit,
   onCancel
 }) => {
+  const { students } = useFinanceData();
+
   const form = useForm<PaymentFormValues>({
     resolver: zodResolver(paymentFormSchema),
     defaultValues: payment ? {
@@ -104,7 +105,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {STUDENTS.map((student) => (
+                  {students && students.map((student) => (
                     <SelectItem key={student.id} value={student.id}>
                       {student.name} - {student.modality}
                     </SelectItem>
