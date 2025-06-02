@@ -205,7 +205,7 @@ export function Sidebar() {
       </div>
 
       <div className="px-4 py-2 border-t border-border text-xs text-muted-foreground mt-auto">
-        <p>© 2024 Corpore - v1.0.0</p>
+        <p>© 2025 Corpore - v1.0.0</p>
       </div>
     </>
   );
