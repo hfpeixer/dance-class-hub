@@ -34,47 +34,28 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-
-interface Teacher {
-  id: string;
-  name: string;
-  modality: string;
-  commissionType: "fixed" | "percentage";
-  commissionValue: number;
-  salary: number;
-}
+import { useTeachers, Teacher } from "./hooks/useTeachers";
 
 const teacherFormSchema = z.object({
   name: z.string().min(1, "Nome do professor é obrigatório"),
-  modality: z.string().min(1, "Modalidade é obrigatória"),
-  commissionType: z.enum(["fixed", "percentage"]),
-  commissionValue: z.coerce.number().min(0),
-  salary: z.coerce.number().min(0),
+  email: z.string().email("Email inválido").optional().or(z.literal("")),
+  phone: z.string().optional(),
+  salary: z.coerce.number().min(0).optional(),
 });
 
 const TeachersPage = () => {
-  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const { teachers, addTeacher, updateTeacher, deleteTeacher, isLoading } = useTeachers();
   const [openDialog, setOpenDialog] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [teacherToDelete, setTeacherToDelete] = useState<string | null>(null);
 
-  // Mock modalities
-  const modalities = [
-    { id: "1", name: "Ballet" },
-    { id: "2", name: "Jazz" },
-    { id: "3", name: "Ginástica Artística" },
-    { id: "4", name: "Ginástica Rítmica" },
-    { id: "5", name: "Futsal" },
-  ];
-
   const form = useForm<z.infer<typeof teacherFormSchema>>({
     resolver: zodResolver(teacherFormSchema),
     defaultValues: {
       name: "",
-      modality: "",
-      commissionType: "fixed",
-      commissionValue: 0,
+      email: "",
+      phone: "",
       salary: 0,
     },
   });
@@ -83,10 +64,9 @@ const TeachersPage = () => {
     if (teacher) {
       setEditingTeacher(teacher);
       form.setValue("name", teacher.name);
-      form.setValue("modality", teacher.modality);
-      form.setValue("commissionType", teacher.commissionType);
-      form.setValue("commissionValue", teacher.commissionValue);
-      form.setValue("salary", teacher.salary);
+      form.setValue("email", teacher.email || "");
+      form.setValue("phone", teacher.phone || "");
+      form.setValue("salary", teacher.salary || 0);
     } else {
       setEditingTeacher(null);
       form.reset();
@@ -99,35 +79,22 @@ const TeachersPage = () => {
     form.reset();
   };
 
-  const onSubmit = (values: z.infer<typeof teacherFormSchema>) => {
+  const onSubmit = async (values: z.infer<typeof teacherFormSchema>) => {
     if (editingTeacher) {
-      // Update existing teacher
-      const updatedTeachers = teachers.map((t) =>
-        t.id === editingTeacher.id
-          ? {
-              ...t,
-              name: values.name,
-              modality: values.modality,
-              commissionType: values.commissionType,
-              commissionValue: values.commissionValue,
-              salary: values.salary,
-            }
-          : t
-      );
-      setTeachers(updatedTeachers);
-      toast.success("Professor atualizado com sucesso!");
-    } else {
-      // Add new teacher
-      const newTeacher: Teacher = {
-        id: Date.now().toString(),
+      await updateTeacher(editingTeacher.id, {
         name: values.name,
-        modality: values.modality,
-        commissionType: values.commissionType,
-        commissionValue: values.commissionValue,
+        email: values.email,
+        phone: values.phone,
         salary: values.salary,
-      };
-      setTeachers([...teachers, newTeacher]);
-      toast.success("Professor cadastrado com sucesso!");
+      });
+    } else {
+      await addTeacher({
+        name: values.name,
+        email: values.email,
+        phone: values.phone,
+        salary: values.salary,
+        status: "active",
+      });
     }
     onCloseDialog();
   };
@@ -137,10 +104,9 @@ const TeachersPage = () => {
     setDeleteConfirmOpen(true);
   };
 
-  const deleteTeacher = () => {
+  const handleDelete = async () => {
     if (teacherToDelete) {
-      setTeachers(teachers.filter((t) => t.id !== teacherToDelete));
-      toast.success("Professor removido com sucesso!");
+      await deleteTeacher(teacherToDelete);
       setDeleteConfirmOpen(false);
       setTeacherToDelete(null);
     }
@@ -165,6 +131,7 @@ const TeachersPage = () => {
         <Button 
           className="bg-dance-primary hover:bg-dance-secondary"
           onClick={() => onOpenDialog()}
+          disabled={isLoading}
         >
           <Plus className="mr-2 h-4 w-4" /> Novo Professor
         </Button>
@@ -182,6 +149,7 @@ const TeachersPage = () => {
               <Button 
                 className="bg-dance-primary hover:bg-dance-secondary"
                 onClick={() => onOpenDialog()}
+                disabled={isLoading}
               >
                 <Plus className="mr-2 h-4 w-4" /> Cadastrar Professor
               </Button>
@@ -202,25 +170,30 @@ const TeachersPage = () => {
                   <div>
                     <h3 className="text-xl font-semibold">{teacher.name}</h3>
                     <Badge variant="outline" className="mt-1">
-                      {teacher.modality}
+                      {teacher.status === 'active' ? 'Ativo' : 'Inativo'}
                     </Badge>
                   </div>
                 </div>
                 
-                <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <p className="text-muted-foreground">Salário Fixo</p>
-                    <p className="font-medium">R$ {teacher.salary.toFixed(2)}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Comissão</p>
-                    <p className="font-medium">
-                      {teacher.commissionType === "fixed" 
-                        ? `R$ ${teacher.commissionValue.toFixed(2)}/aluno`
-                        : `${teacher.commissionValue}%`
-                      }
-                    </p>
-                  </div>
+                <div className="mt-4 grid grid-cols-1 gap-2 text-sm">
+                  {teacher.email && (
+                    <div>
+                      <p className="text-muted-foreground">Email</p>
+                      <p className="font-medium">{teacher.email}</p>
+                    </div>
+                  )}
+                  {teacher.phone && (
+                    <div>
+                      <p className="text-muted-foreground">Telefone</p>
+                      <p className="font-medium">{teacher.phone}</p>
+                    </div>
+                  )}
+                  {teacher.salary && (
+                    <div>
+                      <p className="text-muted-foreground">Salário</p>
+                      <p className="font-medium">R$ {teacher.salary.toFixed(2)}</p>
+                    </div>
+                  )}
                 </div>
                 
                 <div className="flex mt-4 space-x-2 justify-end">
@@ -228,6 +201,7 @@ const TeachersPage = () => {
                     variant="outline" 
                     size="sm" 
                     onClick={() => onOpenDialog(teacher)}
+                    disabled={isLoading}
                   >
                     <Edit className="h-4 w-4 mr-1" /> Editar
                   </Button>
@@ -235,6 +209,7 @@ const TeachersPage = () => {
                     variant="destructive" 
                     size="sm" 
                     onClick={() => confirmDelete(teacher.id)}
+                    disabled={isLoading}
                   >
                     <Trash2 className="h-4 w-4 mr-1" /> Remover
                   </Button>
@@ -275,73 +250,25 @@ const TeachersPage = () => {
               />
               <FormField
                 control={form.control}
-                name="modality"
+                name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Modalidade</FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione a modalidade" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {modalities.map((modality) => (
-                          <SelectItem key={modality.id} value={modality.name}>
-                            {modality.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="commissionType"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tipo de Comissão</FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione o tipo de comissão" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="fixed">Valor Fixo por Aluno</SelectItem>
-                        <SelectItem value="percentage">Porcentagem</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="commissionValue"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      {form.watch("commissionType") === "fixed" 
-                        ? "Valor por Aluno (R$)" 
-                        : "Porcentagem (%)"}
-                    </FormLabel>
+                    <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input 
-                        type="number" 
-                        step={form.watch("commissionType") === "fixed" ? "0.01" : "1"}
-                        min="0"
-                        placeholder={form.watch("commissionType") === "fixed" ? "0.00" : "0"}
-                        {...field}
-                      />
+                      <Input placeholder="email@exemplo.com" type="email" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Telefone</FormLabel>
+                    <FormControl>
+                      <Input placeholder="(11) 99999-9999" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -352,7 +279,7 @@ const TeachersPage = () => {
                 name="salary"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Salário Fixo (R$)</FormLabel>
+                    <FormLabel>Salário (R$)</FormLabel>
                     <FormControl>
                       <Input 
                         type="number" 
@@ -370,7 +297,7 @@ const TeachersPage = () => {
                 <Button type="button" variant="outline" onClick={onCloseDialog}>
                   Cancelar
                 </Button>
-                <Button type="submit" className="bg-dance-primary hover:bg-dance-secondary">
+                <Button type="submit" className="bg-dance-primary hover:bg-dance-secondary" disabled={isLoading}>
                   {editingTeacher ? "Salvar Alterações" : "Cadastrar Professor"}
                 </Button>
               </DialogFooter>
@@ -392,7 +319,7 @@ const TeachersPage = () => {
             <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)}>
               Cancelar
             </Button>
-            <Button variant="destructive" onClick={deleteTeacher}>
+            <Button variant="destructive" onClick={handleDelete} disabled={isLoading}>
               Excluir
             </Button>
           </DialogFooter>
