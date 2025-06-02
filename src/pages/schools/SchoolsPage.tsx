@@ -31,6 +31,8 @@ import type { School as SchoolType } from "./hooks/useSchools";
 const schoolFormSchema = z.object({
   name: z.string().min(1, "Nome da escola é obrigatório"),
   address: z.string().optional(),
+  neighborhood: z.string().optional(),
+  city: z.string().optional(),
   phone: z.string().optional(),
   email: z.string().email("Email inválido").optional().or(z.literal("")),
   principal: z.string().optional(),
@@ -48,6 +50,8 @@ const SchoolsPage = () => {
     defaultValues: {
       name: "",
       address: "",
+      neighborhood: "",
+      city: "",
       phone: "",
       email: "",
       principal: "",
@@ -59,6 +63,8 @@ const SchoolsPage = () => {
       setEditingSchool(school);
       form.setValue("name", school.name);
       form.setValue("address", school.address || "");
+      form.setValue("neighborhood", school.neighborhood || "");
+      form.setValue("city", school.city || "");
       form.setValue("phone", school.phone || "");
       form.setValue("email", school.email || "");
       form.setValue("principal", school.principal || "");
@@ -79,6 +85,8 @@ const SchoolsPage = () => {
       await updateSchool(editingSchool.id, {
         name: values.name,
         address: values.address,
+        neighborhood: values.neighborhood,
+        city: values.city,
         phone: values.phone,
         email: values.email,
         principal: values.principal,
@@ -87,6 +95,8 @@ const SchoolsPage = () => {
       await addSchool({
         name: values.name,
         address: values.address,
+        neighborhood: values.neighborhood,
+        city: values.city,
         phone: values.phone,
         email: values.email,
         principal: values.principal,
@@ -152,6 +162,8 @@ const SchoolsPage = () => {
                 <h3 className="text-xl font-semibold mb-2">{school.name}</h3>
                 <div className="text-sm text-muted-foreground space-y-1">
                   {school.address && <p>{school.address}</p>}
+                  {school.neighborhood && <p>Bairro: {school.neighborhood}</p>}
+                  {school.city && <p>Cidade: {school.city}</p>}
                   {school.phone && <p>Tel: {school.phone}</p>}
                   {school.email && <p>Email: {school.email}</p>}
                   {school.principal && <p>Diretor: {school.principal}</p>}
@@ -221,6 +233,34 @@ const SchoolsPage = () => {
                   </FormItem>
                 )}
               />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="neighborhood"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Bairro</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Bairro" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="city"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Cidade</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Cidade" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
               <FormField
                 control={form.control}
                 name="phone"

@@ -1,15 +1,28 @@
 import { useState, useEffect } from "react";
-import { v4 as uuidv4 } from 'uuid';
-import { Enrollment } from "../models/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+
+export interface Enrollment {
+  id: string;
+  studentId: string;
+  studentName?: string;
+  modality: string;
+  modalityName?: string;
+  class: string;
+  className?: string;
+  enrollmentDate: string;
+  status: "active" | "inactive" | "cancelled";
+  enrollmentFee: number;
+  monthlyFee: number;
+  paymentDay: number;
+  notes?: string;
+}
 
 export const useEnrollments = () => {
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  // Fetch enrollments from Supabase
   useEffect(() => {
     const fetchEnrollments = async () => {
       setIsLoading(true);
@@ -72,18 +85,21 @@ export const useEnrollments = () => {
     setIsLoading(true);
     
     try {
-      // Convert frontend format to database format with proper null handling for dates
+      console.log("Adding enrollment with data:", enrollment);
+      
       const dbEnrollment = {
         student_id: enrollment.studentId,
         modality_id: enrollment.modality,
         class_id: enrollment.class,
-        enrollment_date: enrollment.enrollmentDate || enrollment.date,
+        enrollment_date: enrollment.enrollmentDate,
         status: enrollment.status,
         enrollment_fee: enrollment.enrollmentFee,
         monthly_fee: enrollment.monthlyFee,
         payment_day: enrollment.paymentDay,
         notes: enrollment.notes
       };
+      
+      console.log("Database enrollment object:", dbEnrollment);
       
       const { data, error } = await supabase
         .from('enrollments')
@@ -142,7 +158,6 @@ export const useEnrollments = () => {
     setIsLoading(true);
     
     try {
-      // Convert frontend format to database format
       const dbEnrollment: any = {};
       
       if (updatedEnrollment.modality !== undefined) dbEnrollment.modality_id = updatedEnrollment.modality;
@@ -161,7 +176,6 @@ export const useEnrollments = () => {
       
       if (error) throw error;
       
-      // Get updated enrollment with related data
       const { data: updatedData, error: fetchError } = await supabase
         .from('enrollments')
         .select(`

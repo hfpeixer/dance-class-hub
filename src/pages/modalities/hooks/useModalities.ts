@@ -81,7 +81,12 @@ export const useModalities = () => {
     try {
       const { error } = await supabase
         .from('modalities')
-        .update(updatedModality)
+        .update({
+          name: updatedModality.name,
+          description: updatedModality.description,
+          monthly_fee: updatedModality.monthly_fee,
+          enrollment_fee: updatedModality.enrollment_fee
+        })
         .eq('id', id);
       
       if (error) throw error;

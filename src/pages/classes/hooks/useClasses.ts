@@ -27,7 +27,13 @@ export const useClasses = () => {
       try {
         const { data, error } = await supabase
           .from('classes')
-          .select('*');
+          .select(`
+            *,
+            modalities (
+              id,
+              name
+            )
+          `);
         
         if (error) throw error;
         
@@ -61,7 +67,13 @@ export const useClasses = () => {
           max_students: classData.max_students,
           current_students: classData.current_students || 0
         })
-        .select();
+        .select(`
+          *,
+          modalities (
+            id,
+            name
+          )
+        `);
       
       if (error) throw error;
       
@@ -85,7 +97,14 @@ export const useClasses = () => {
     try {
       const { error } = await supabase
         .from('classes')
-        .update(updatedClass)
+        .update({
+          name: updatedClass.name,
+          modality_id: updatedClass.modality_id,
+          teacher: updatedClass.teacher,
+          schedule: updatedClass.schedule,
+          max_students: updatedClass.max_students,
+          current_students: updatedClass.current_students
+        })
         .eq('id', id);
       
       if (error) throw error;
