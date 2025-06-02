@@ -5,7 +5,7 @@ import { toast } from "sonner";
 export interface Enrollment {
   id: string;
   studentId: string;
-  studentName?: string;
+  studentName: string; // Made required to match types.ts
   modality: string;
   modalityName?: string;
   class: string;
@@ -53,7 +53,7 @@ export const useEnrollments = () => {
           const formattedEnrollments: Enrollment[] = data.map((enrollment: any) => ({
             id: enrollment.id,
             studentId: enrollment.student_id,
-            studentName: enrollment.students?.name || 'Desconhecido',
+            studentName: enrollment.students?.name || 'Desconhecido', // Provide default value
             modality: enrollment.modality_id,
             modalityName: enrollment.modalities?.name || 'Desconhecida',
             class: enrollment.class_id,
