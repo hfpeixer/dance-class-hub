@@ -52,7 +52,7 @@ export function useStudents() {
         const formattedStudents = data.map((student: any) => ({
           id: student.id,
           name: student.name,
-          age: student.age || 0,
+          age: student.age || 0, // Age is now calculated automatically by the database
           modality: student.modality || '',
           class: student.class || '',
           status: student.status as 'active' | 'inactive',
@@ -112,9 +112,10 @@ export function useStudents() {
     
     try {
       // Convert frontend format to database format with proper null handling for dates
+      // Note: We don't need to calculate age manually anymore, the database trigger will handle it
       const dbStudent = {
         name: studentData.name,
-        age: studentData.age,
+        // Remove age from insert as it will be calculated automatically by the trigger
         modality: studentData.modalities ? studentData.modalities[0] : '',
         class: studentData.class || '',
         status: studentData.status || 'active',
@@ -148,7 +149,7 @@ export function useStudents() {
         const newStudent = {
           id: data[0].id,
           name: data[0].name,
-          age: data[0].age || 0,
+          age: data[0].age || 0, // Age is calculated by the database trigger
           modality: data[0].modality || '',
           class: data[0].class || '',
           status: data[0].status as 'active' | 'inactive',
@@ -183,10 +184,11 @@ export function useStudents() {
     
     try {
       // Convert frontend format to database format with proper null handling for dates
+      // Note: We don't need to calculate age manually anymore, the database trigger will handle it
       const dbStudent: any = {};
       
       if (studentData.name !== undefined) dbStudent.name = studentData.name;
-      if (studentData.age !== undefined) dbStudent.age = studentData.age;
+      // Remove age calculation as it's handled by the database trigger
       if (studentData.status !== undefined) dbStudent.status = studentData.status;
       if (studentData.email !== undefined) dbStudent.email = studentData.email;
       if (studentData.phone !== undefined) dbStudent.phone = studentData.phone;
@@ -212,30 +214,35 @@ export function useStudents() {
       
       console.log("Updating student with ID:", id, "Data:", dbStudent);
       
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('students')
         .update(dbStudent)
-        .eq('id', id);
+        .eq('id', id)
+        .select();
       
       if (error) {
         console.error("Supabase error updating student:", error);
         throw error;
       }
       
-      // Update local state
-      setStudents(prevStudents => 
-        prevStudents.map(student => {
-          if (student.id === id) {
-            // Update modality if modalities array is provided
-            const updatedStudent = { ...student, ...studentData };
-            if (studentData.modalities && studentData.modalities.length > 0) {
-              updatedStudent.modality = studentData.modalities[0];
+      // Update local state with the returned data (which includes the calculated age)
+      if (data && data.length > 0) {
+        setStudents(prevStudents => 
+          prevStudents.map(student => {
+            if (student.id === id) {
+              return {
+                ...student,
+                ...studentData,
+                age: data[0].age || student.age, // Use the calculated age from database
+                modality: studentData.modalities && studentData.modalities.length > 0 
+                  ? studentData.modalities[0] 
+                  : student.modality
+              };
             }
-            return updatedStudent;
-          }
-          return student;
-        })
-      );
+            return student;
+          })
+        );
+      }
       
       toast.success("Aluno atualizado com sucesso!");
     } catch (err) {

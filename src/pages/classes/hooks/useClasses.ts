@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -7,6 +6,10 @@ export interface Class {
   id: string;
   name: string;
   modality_id: string;
+  modality?: {
+    id: string;
+    name: string;
+  };
   teacher?: string;
   schedule: string;
   max_students?: number;
@@ -38,7 +41,23 @@ export const useClasses = () => {
         if (error) throw error;
         
         if (data) {
-          setClasses(data);
+          // Format the data to include modality information
+          const formattedClasses = data.map((classItem: any) => ({
+            id: classItem.id,
+            name: classItem.name,
+            modality_id: classItem.modality_id,
+            modality: classItem.modalities ? {
+              id: classItem.modalities.id,
+              name: classItem.modalities.name
+            } : undefined,
+            teacher: classItem.teacher,
+            schedule: classItem.schedule,
+            max_students: classItem.max_students,
+            current_students: classItem.current_students,
+            created_at: classItem.created_at
+          }));
+          
+          setClasses(formattedClasses);
         }
         
         setIsLoading(false);
@@ -78,7 +97,22 @@ export const useClasses = () => {
       if (error) throw error;
       
       if (data && data.length > 0) {
-        setClasses(prevClasses => [...prevClasses, data[0]]);
+        const formattedClass = {
+          id: data[0].id,
+          name: data[0].name,
+          modality_id: data[0].modality_id,
+          modality: data[0].modalities ? {
+            id: data[0].modalities.id,
+            name: data[0].modalities.name
+          } : undefined,
+          teacher: data[0].teacher,
+          schedule: data[0].schedule,
+          max_students: data[0].max_students,
+          current_students: data[0].current_students,
+          created_at: data[0].created_at
+        };
+        
+        setClasses(prevClasses => [...prevClasses, formattedClass]);
         toast.success("Turma adicionada com sucesso");
       }
       
@@ -95,7 +129,7 @@ export const useClasses = () => {
     setIsLoading(true);
     
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('classes')
         .update({
           name: updatedClass.name,
@@ -105,15 +139,39 @@ export const useClasses = () => {
           max_students: updatedClass.max_students,
           current_students: updatedClass.current_students
         })
-        .eq('id', id);
+        .eq('id', id)
+        .select(`
+          *,
+          modalities (
+            id,
+            name
+          )
+        `);
       
       if (error) throw error;
       
-      setClasses(prevClasses => 
-        prevClasses.map(classItem => 
-          classItem.id === id ? { ...classItem, ...updatedClass } : classItem
-        )
-      );
+      if (data && data.length > 0) {
+        const formattedClass = {
+          id: data[0].id,
+          name: data[0].name,
+          modality_id: data[0].modality_id,
+          modality: data[0].modalities ? {
+            id: data[0].modalities.id,
+            name: data[0].modalities.name
+          } : undefined,
+          teacher: data[0].teacher,
+          schedule: data[0].schedule,
+          max_students: data[0].max_students,
+          current_students: data[0].current_students,
+          created_at: data[0].created_at
+        };
+        
+        setClasses(prevClasses => 
+          prevClasses.map(classItem => 
+            classItem.id === id ? formattedClass : classItem
+          )
+        );
+      }
       
       toast.success("Turma atualizada com sucesso");
       setIsLoading(false);

@@ -96,6 +96,13 @@ export type Database = {
             referencedRelation: "modalities"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fk_classes_modality"
+            columns: ["modality_id"]
+            isOneToOne: false
+            referencedRelation: "modalities"
+            referencedColumns: ["id"]
+          },
         ]
       }
       enrollments: {
@@ -554,7 +561,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      calculate_age: {
+        Args: { birth_date: string }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never
