@@ -1,42 +1,22 @@
 
 import React, { useState } from "react";
-import { School, Plus, Edit, Trash2 } from "lucide-react";
+import { School, Plus } from "lucide-react";
 import { PageTitle } from "@/components/layout/PageTitle";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
   DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useSchools } from "./hooks/useSchools";
+import { SchoolForm } from "./components/SchoolForm";
+import { SchoolCard } from "./components/SchoolCard";
+import { EmptySchoolsState } from "./components/EmptySchoolsState";
 import type { School as SchoolType } from "./hooks/useSchools";
-
-const schoolFormSchema = z.object({
-  name: z.string().min(1, "Nome da escola é obrigatório"),
-  address: z.string().optional(),
-  neighborhood: z.string().optional(),
-  city: z.string().optional(),
-  phone: z.string().optional(),
-  email: z.string().email("Email inválido").optional().or(z.literal("")),
-  principal: z.string().optional(),
-});
 
 const SchoolsPage = () => {
   const { schools, addSchool, updateSchool, deleteSchool, isLoading } = useSchools();
@@ -45,65 +25,23 @@ const SchoolsPage = () => {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [schoolToDelete, setSchoolToDelete] = useState<string | null>(null);
 
-  const form = useForm<z.infer<typeof schoolFormSchema>>({
-    resolver: zodResolver(schoolFormSchema),
-    defaultValues: {
-      name: "",
-      address: "",
-      neighborhood: "",
-      city: "",
-      phone: "",
-      email: "",
-      principal: "",
-    },
-  });
-
-  const onOpenDialog = (school?: SchoolType) => {
-    if (school) {
-      setEditingSchool(school);
-      form.setValue("name", school.name);
-      form.setValue("address", school.address || "");
-      form.setValue("neighborhood", school.neighborhood || "");
-      form.setValue("city", school.city || "");
-      form.setValue("phone", school.phone || "");
-      form.setValue("email", school.email || "");
-      form.setValue("principal", school.principal || "");
-    } else {
-      setEditingSchool(null);
-      form.reset();
-    }
+  const handleOpenDialog = (school?: SchoolType) => {
+    setEditingSchool(school || null);
     setOpenDialog(true);
   };
 
-  const onCloseDialog = () => {
+  const handleCloseDialog = () => {
     setOpenDialog(false);
-    form.reset();
+    setEditingSchool(null);
   };
 
-  const onSubmit = async (values: z.infer<typeof schoolFormSchema>) => {
+  const handleSubmit = async (values: any) => {
     if (editingSchool) {
-      await updateSchool(editingSchool.id, {
-        name: values.name,
-        address: values.address,
-        neighborhood: values.neighborhood,
-        city: values.city,
-        phone: values.phone,
-        email: values.email,
-        principal: values.principal,
-      });
+      await updateSchool(editingSchool.id, values);
     } else {
-      await addSchool({
-        name: values.name,
-        address: values.address,
-        neighborhood: values.neighborhood,
-        city: values.city,
-        phone: values.phone,
-        email: values.email,
-        principal: values.principal,
-        status: "active",
-      });
+      await addSchool({ ...values, status: "active" });
     }
-    onCloseDialog();
+    handleCloseDialog();
   };
 
   const confirmDelete = (id: string) => {
@@ -128,7 +66,7 @@ const SchoolsPage = () => {
       >
         <Button 
           className="bg-dance-primary hover:bg-dance-secondary"
-          onClick={() => onOpenDialog()}
+          onClick={() => handleOpenDialog()}
           disabled={isLoading}
         >
           <Plus className="mr-2 h-4 w-4" /> Nova Escola
@@ -136,63 +74,21 @@ const SchoolsPage = () => {
       </PageTitle>
 
       {schools.length === 0 ? (
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex flex-col items-center justify-center min-h-[300px] text-center">
-              <School className="h-16 w-16 text-muted-foreground mb-4" />
-              <h3 className="text-xl font-medium mb-2">Nenhuma escola cadastrada</h3>
-              <p className="text-muted-foreground mb-6">
-                Cadastre sua primeira escola ou unidade para começar.
-              </p>
-              <Button 
-                className="bg-dance-primary hover:bg-dance-secondary"
-                onClick={() => onOpenDialog()}
-                disabled={isLoading}
-              >
-                <Plus className="mr-2 h-4 w-4" /> Cadastrar Escola
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <EmptySchoolsState onAddSchool={() => handleOpenDialog()} isLoading={isLoading} />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
           {schools.map((school) => (
-            <Card key={school.id} className="overflow-hidden">
-              <CardContent className="p-6">
-                <h3 className="text-xl font-semibold mb-2">{school.name}</h3>
-                <div className="text-sm text-muted-foreground space-y-1">
-                  {school.address && <p>{school.address}</p>}
-                  {school.neighborhood && <p>Bairro: {school.neighborhood}</p>}
-                  {school.city && <p>Cidade: {school.city}</p>}
-                  {school.phone && <p>Tel: {school.phone}</p>}
-                  {school.email && <p>Email: {school.email}</p>}
-                  {school.principal && <p>Diretor: {school.principal}</p>}
-                </div>
-                <div className="flex mt-4 space-x-2 justify-end">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => onOpenDialog(school)}
-                    disabled={isLoading}
-                  >
-                    <Edit className="h-4 w-4 mr-1" /> Editar
-                  </Button>
-                  <Button 
-                    variant="destructive" 
-                    size="sm" 
-                    onClick={() => confirmDelete(school.id)}
-                    disabled={isLoading}
-                  >
-                    <Trash2 className="h-4 w-4 mr-1" /> Remover
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <SchoolCard
+              key={school.id}
+              school={school}
+              onEdit={handleOpenDialog}
+              onDelete={confirmDelete}
+              isLoading={isLoading}
+            />
           ))}
         </div>
       )}
 
-      {/* School Form Dialog */}
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
@@ -205,115 +101,15 @@ const SchoolsPage = () => {
                 : "Preencha as informações para cadastrar uma nova escola."}
             </DialogDescription>
           </DialogHeader>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nome da Escola</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Nome da escola" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="address"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Endereço</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Rua, número" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="neighborhood"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Bairro</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Bairro" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="city"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Cidade</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Cidade" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <FormField
-                control={form.control}
-                name="phone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Telefone</FormLabel>
-                    <FormControl>
-                      <Input placeholder="(11) 99999-9999" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input placeholder="email@escola.com" type="email" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="principal"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Diretor</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Nome do diretor" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={onCloseDialog}>
-                  Cancelar
-                </Button>
-                <Button type="submit" className="bg-dance-primary hover:bg-dance-secondary" disabled={isLoading}>
-                  {editingSchool ? "Salvar Alterações" : "Cadastrar Escola"}
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
+          <SchoolForm
+            initialData={editingSchool}
+            onSubmit={handleSubmit}
+            onCancel={handleCloseDialog}
+            isLoading={isLoading}
+          />
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
       <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>

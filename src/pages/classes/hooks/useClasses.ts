@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -32,7 +33,7 @@ export const useClasses = () => {
           .from('classes')
           .select(`
             *,
-            modalities (
+            modality:modalities (
               id,
               name
             )
@@ -46,9 +47,9 @@ export const useClasses = () => {
             id: classItem.id,
             name: classItem.name,
             modality_id: classItem.modality_id,
-            modality: classItem.modalities ? {
-              id: classItem.modalities.id,
-              name: classItem.modalities.name
+            modality: classItem.modality ? {
+              id: classItem.modality.id,
+              name: classItem.modality.name
             } : undefined,
             teacher: classItem.teacher,
             schedule: classItem.schedule,
@@ -88,7 +89,7 @@ export const useClasses = () => {
         })
         .select(`
           *,
-          modalities (
+          modality:modalities (
             id,
             name
           )
@@ -101,9 +102,9 @@ export const useClasses = () => {
           id: data[0].id,
           name: data[0].name,
           modality_id: data[0].modality_id,
-          modality: data[0].modalities ? {
-            id: data[0].modalities.id,
-            name: data[0].modalities.name
+          modality: data[0].modality ? {
+            id: data[0].modality.id,
+            name: data[0].modality.name
           } : undefined,
           teacher: data[0].teacher,
           schedule: data[0].schedule,
@@ -142,7 +143,7 @@ export const useClasses = () => {
         .eq('id', id)
         .select(`
           *,
-          modalities (
+          modality:modalities (
             id,
             name
           )
@@ -155,9 +156,9 @@ export const useClasses = () => {
           id: data[0].id,
           name: data[0].name,
           modality_id: data[0].modality_id,
-          modality: data[0].modalities ? {
-            id: data[0].modalities.id,
-            name: data[0].modalities.name
+          modality: data[0].modality ? {
+            id: data[0].modality.id,
+            name: data[0].modality.name
           } : undefined,
           teacher: data[0].teacher,
           schedule: data[0].schedule,
