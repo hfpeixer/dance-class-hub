@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { BookOpen, Plus, Edit, Trash2, Users, Calendar } from "lucide-react";
 import { PageTitle } from "@/components/layout/PageTitle";
 import { Button } from "@/components/ui/button";
@@ -33,92 +33,72 @@ import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useClasses, Class } from "./hooks/useClasses";
+import { useTeachers } from "../teachers/hooks/useTeachers";
+import { supabase } from "@/integrations/supabase/client";
 
-interface Class {
+interface Modality {
   id: string;
   name: string;
-  modality: string;
-  modalityColor: string;
-  teacherId: string;
-  teacherName: string;
-  schedule: string;
-  location: string;
-  studentCount: number;
-  dayOfWeek: string[];
 }
 
 const classFormSchema = z.object({
   name: z.string().min(1, "Nome da turma é obrigatório"),
-  modality: z.string().min(1, "Modalidade é obrigatória"),
-  teacherId: z.string().min(1, "Professor é obrigatório"),
+  modality_id: z.string().min(1, "Modalidade é obrigatória"),
+  teacher: z.string().optional(),
   schedule: z.string().min(1, "Horário é obrigatório"),
-  location: z.string().min(1, "Local é obrigatório"),
-  dayOfWeek: z.string().array().min(1, "Selecione pelo menos um dia da semana"),
+  max_students: z.coerce.number().min(1, "Número máximo de alunos é obrigatório"),
 });
 
 const ClassesPage = () => {
-  const [classes, setClasses] = useState<Class[]>([]);
+  const { classes, addClass, updateClass, deleteClass, isLoading } = useClasses();
+  const { teachers } = useTeachers();
+  const [modalities, setModalities] = useState<Modality[]>([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [editingClass, setEditingClass] = useState<Class | null>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [classToDelete, setClassToDelete] = useState<string | null>(null);
-  
-  // Mock modalities
-  const modalities = [
-    { id: "1", name: "Ballet", color: "bg-modalidades-ballet" },
-    { id: "2", name: "Jazz", color: "bg-modalidades-jazz" },
-    { id: "3", name: "Ginástica Artística", color: "bg-modalidades-ginastica" },
-    { id: "4", name: "Ginástica Rítmica", color: "bg-modalidades-ritmica" },
-    { id: "5", name: "Futsal", color: "bg-modalidades-futsal" },
-  ];
 
-  // Mock teachers
-  const teachers = [
-    { id: "1", name: "Maria Santos", modality: "Ballet" },
-    { id: "2", name: "João Pereira", modality: "Futsal" },
-    { id: "3", name: "Ana Lima", modality: "Jazz" },
-    { id: "4", name: "Carlos Ferreira", modality: "Ginástica Artística" },
-    { id: "5", name: "Mariana Costa", modality: "Ginástica Rítmica" },
-  ];
-
-  // Days of week
-  const daysOfWeek = [
-    { id: "seg", name: "Segunda-feira" },
-    { id: "ter", name: "Terça-feira" },
-    { id: "qua", name: "Quarta-feira" },
-    { id: "qui", name: "Quinta-feira" },
-    { id: "sex", name: "Sexta-feira" },
-    { id: "sab", name: "Sábado" },
-  ];
+  // Fetch modalities from Supabase
+  useEffect(() => {
+    const fetchModalities = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('modalities')
+          .select('id, name')
+          .order('name');
+        
+        if (error) throw error;
+        
+        setModalities(data || []);
+      } catch (err) {
+        console.error("Error fetching modalities:", err);
+        toast.error("Erro ao carregar modalidades");
+      }
+    };
+    
+    fetchModalities();
+  }, []);
 
   const form = useForm<z.infer<typeof classFormSchema>>({
     resolver: zodResolver(classFormSchema),
     defaultValues: {
       name: "",
-      modality: "",
-      teacherId: "",
+      modality_id: "",
+      teacher: "",
       schedule: "",
-      location: "",
-      dayOfWeek: [],
+      max_students: 15,
     },
   });
 
-  const selectedModality = form.watch("modality");
-  
-  // Filter teachers based on selected modality
-  const filteredTeachers = selectedModality 
-    ? teachers.filter(teacher => teacher.modality === selectedModality)
-    : teachers;
-  
   const onOpenDialog = (classItem?: Class) => {
     if (classItem) {
       setEditingClass(classItem);
       form.setValue("name", classItem.name);
-      form.setValue("modality", classItem.modality);
-      form.setValue("teacherId", classItem.teacherId);
+      form.setValue("modality_id", classItem.modality_id);
+      form.setValue("teacher", classItem.teacher || "");
       form.setValue("schedule", classItem.schedule);
-      form.setValue("location", classItem.location);
-      form.setValue("dayOfWeek", classItem.dayOfWeek);
+      form.setValue("max_students", classItem.max_students || 15);
     } else {
       setEditingClass(null);
       form.reset();
@@ -131,52 +111,30 @@ const ClassesPage = () => {
     form.reset();
   };
 
-  const onSubmit = (values: z.infer<typeof classFormSchema>) => {
-    const selectedTeacher = teachers.find(t => t.id === values.teacherId);
-    const modalityItem = modalities.find(m => m.name === values.modality);
-    
-    if (!selectedTeacher || !modalityItem) {
-      toast.error("Professor ou modalidade não encontrado!");
-      return;
+  const onSubmit = async (values: z.infer<typeof classFormSchema>) => {
+    try {
+      if (editingClass) {
+        await updateClass(editingClass.id, {
+          name: values.name,
+          modality_id: values.modality_id,
+          teacher: values.teacher,
+          schedule: values.schedule,
+          max_students: values.max_students,
+        });
+      } else {
+        await addClass({
+          name: values.name,
+          modality_id: values.modality_id,
+          teacher: values.teacher,
+          schedule: values.schedule,
+          max_students: values.max_students,
+          current_students: 0,
+        });
+      }
+      onCloseDialog();
+    } catch (error) {
+      console.error("Error saving class:", error);
     }
-    
-    if (editingClass) {
-      // Update existing class
-      const updatedClasses = classes.map((c) =>
-        c.id === editingClass.id
-          ? {
-              ...c,
-              name: values.name,
-              modality: values.modality,
-              modalityColor: modalityItem.color,
-              teacherId: values.teacherId,
-              teacherName: selectedTeacher.name,
-              schedule: values.schedule,
-              location: values.location,
-              dayOfWeek: values.dayOfWeek,
-            }
-          : c
-      );
-      setClasses(updatedClasses);
-      toast.success("Turma atualizada com sucesso!");
-    } else {
-      // Add new class
-      const newClass: Class = {
-        id: Date.now().toString(),
-        name: values.name,
-        modality: values.modality,
-        modalityColor: modalityItem.color,
-        teacherId: values.teacherId,
-        teacherName: selectedTeacher.name,
-        schedule: values.schedule,
-        location: values.location,
-        dayOfWeek: values.dayOfWeek,
-        studentCount: 0,
-      };
-      setClasses([...classes, newClass]);
-      toast.success("Turma cadastrada com sucesso!");
-    }
-    onCloseDialog();
   };
 
   const confirmDelete = (id: string) => {
@@ -184,27 +142,17 @@ const ClassesPage = () => {
     setDeleteConfirmOpen(true);
   };
 
-  const deleteClass = () => {
+  const handleDelete = async () => {
     if (classToDelete) {
-      setClasses(classes.filter((c) => c.id !== classToDelete));
-      toast.success("Turma removida com sucesso!");
+      await deleteClass(classToDelete);
       setDeleteConfirmOpen(false);
       setClassToDelete(null);
     }
   };
 
-  const formatDaysOfWeek = (days: string[]) => {
-    if (days.length <= 2) {
-      return days.map(day => {
-        const dayObj = daysOfWeek.find(d => d.id === day);
-        return dayObj ? dayObj.name.substring(0, 3) : day;
-      }).join(" e ");
-    }
-    
-    return days.map(day => {
-      const dayObj = daysOfWeek.find(d => d.id === day);
-      return dayObj ? dayObj.name.substring(0, 3) : day;
-    }).join(", ");
+  const getModalityName = (modalityId: string) => {
+    const modality = modalities.find(m => m.id === modalityId);
+    return modality?.name || 'Modalidade não encontrada';
   };
 
   return (
@@ -217,6 +165,7 @@ const ClassesPage = () => {
         <Button 
           className="bg-dance-primary hover:bg-dance-secondary"
           onClick={() => onOpenDialog()}
+          disabled={isLoading}
         >
           <Plus className="mr-2 h-4 w-4" /> Nova Turma
         </Button>
@@ -234,6 +183,7 @@ const ClassesPage = () => {
               <Button 
                 className="bg-dance-primary hover:bg-dance-secondary"
                 onClick={() => onOpenDialog()}
+                disabled={isLoading}
               >
                 <Plus className="mr-2 h-4 w-4" /> Cadastrar Turma
               </Button>
@@ -244,13 +194,12 @@ const ClassesPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
           {classes.map((classItem) => (
             <Card key={classItem.id} className="overflow-hidden">
-              <div className={`h-2 w-full ${classItem.modalityColor}`} />
               <CardHeader className="pb-2">
                 <div className="flex justify-between items-start">
                   <div>
                     <CardTitle className="text-xl">{classItem.name}</CardTitle>
                     <Badge variant="outline" className="mt-1">
-                      {classItem.modality}
+                      {classItem.modality?.name || getModalityName(classItem.modality_id)}
                     </Badge>
                   </div>
                 </div>
@@ -260,25 +209,24 @@ const ClassesPage = () => {
                   <div className="flex items-center gap-2">
                     <Users className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm">
-                      {classItem.studentCount} alunos
+                      {classItem.current_students || 0}/{classItem.max_students || 0} alunos
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm">
-                      {formatDaysOfWeek(classItem.dayOfWeek)}
+                      {classItem.schedule}
                     </span>
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-sm">
-                    <span className="font-medium">Professor:</span> {classItem.teacherName}
-                  </p>
+                  {classItem.teacher && (
+                    <p className="text-sm">
+                      <span className="font-medium">Professor:</span> {classItem.teacher}
+                    </p>
+                  )}
                   <p className="text-sm">
                     <span className="font-medium">Horário:</span> {classItem.schedule}
-                  </p>
-                  <p className="text-sm">
-                    <span className="font-medium">Local:</span> {classItem.location}
                   </p>
                 </div>
               </CardContent>
@@ -287,6 +235,7 @@ const ClassesPage = () => {
                   variant="outline" 
                   size="sm"
                   onClick={() => onOpenDialog(classItem)}
+                  disabled={isLoading}
                 >
                   <Edit className="h-4 w-4 mr-1" /> Editar
                 </Button>
@@ -294,6 +243,7 @@ const ClassesPage = () => {
                   variant="destructive" 
                   size="sm"
                   onClick={() => confirmDelete(classItem.id)}
+                  disabled={isLoading}
                 >
                   <Trash2 className="h-4 w-4 mr-1" /> Remover
                 </Button>
@@ -333,7 +283,7 @@ const ClassesPage = () => {
               />
               <FormField
                 control={form.control}
-                name="modality"
+                name="modality_id"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Modalidade</FormLabel>
@@ -349,11 +299,8 @@ const ClassesPage = () => {
                       </FormControl>
                       <SelectContent>
                         {modalities.map((modality) => (
-                          <SelectItem key={modality.id} value={modality.name}>
-                            <div className="flex items-center gap-2">
-                              <div className={`w-3 h-3 rounded-full ${modality.color}`} />
-                              <span>{modality.name}</span>
-                            </div>
+                          <SelectItem key={modality.id} value={modality.id}>
+                            {modality.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -364,7 +311,7 @@ const ClassesPage = () => {
               />
               <FormField
                 control={form.control}
-                name="teacherId"
+                name="teacher"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Professor</FormLabel>
@@ -372,16 +319,16 @@ const ClassesPage = () => {
                       onValueChange={field.onChange} 
                       defaultValue={field.value}
                       value={field.value}
-                      disabled={!selectedModality}
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder={selectedModality ? "Selecione o professor" : "Selecione uma modalidade primeiro"} />
+                          <SelectValue placeholder="Selecione o professor (opcional)" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {filteredTeachers.map((teacher) => (
-                          <SelectItem key={teacher.id} value={teacher.id}>
+                        <SelectItem value="">Sem professor atribuído</SelectItem>
+                        {teachers.filter(t => t.status === 'active').map((teacher) => (
+                          <SelectItem key={teacher.id} value={teacher.name}>
                             {teacher.name}
                           </SelectItem>
                         ))}
@@ -393,43 +340,12 @@ const ClassesPage = () => {
               />
               <FormField
                 control={form.control}
-                name="dayOfWeek"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Dias da Semana</FormLabel>
-                    <div className="flex flex-wrap gap-2 mt-1">
-                      {daysOfWeek.map((day) => (
-                        <Badge
-                          key={day.id}
-                          variant={field.value.includes(day.id) ? "default" : "outline"}
-                          className={`cursor-pointer ${
-                            field.value.includes(day.id) 
-                              ? "bg-dance-primary hover:bg-dance-secondary" 
-                              : ""
-                          }`}
-                          onClick={() => {
-                            const updatedDays = field.value.includes(day.id)
-                              ? field.value.filter((d) => d !== day.id)
-                              : [...field.value, day.id];
-                            field.onChange(updatedDays);
-                          }}
-                        >
-                          {day.name.substring(0, 3)}
-                        </Badge>
-                      ))}
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
                 name="schedule"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Horário</FormLabel>
                     <FormControl>
-                      <Input placeholder="Ex: 14:00 - 15:30" {...field} />
+                      <Input placeholder="Ex: Segunda e Quarta 14:00-15:30" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -437,12 +353,17 @@ const ClassesPage = () => {
               />
               <FormField
                 control={form.control}
-                name="location"
+                name="max_students"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Local</FormLabel>
+                    <FormLabel>Máximo de Alunos</FormLabel>
                     <FormControl>
-                      <Input placeholder="Ex: Sala 3" {...field} />
+                      <Input 
+                        type="number" 
+                        min="1"
+                        placeholder="15"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -452,7 +373,7 @@ const ClassesPage = () => {
                 <Button type="button" variant="outline" onClick={onCloseDialog}>
                   Cancelar
                 </Button>
-                <Button type="submit" className="bg-dance-primary hover:bg-dance-secondary">
+                <Button type="submit" className="bg-dance-primary hover:bg-dance-secondary" disabled={isLoading}>
                   {editingClass ? "Salvar Alterações" : "Cadastrar Turma"}
                 </Button>
               </DialogFooter>
@@ -474,7 +395,7 @@ const ClassesPage = () => {
             <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)}>
               Cancelar
             </Button>
-            <Button variant="destructive" onClick={deleteClass}>
+            <Button variant="destructive" onClick={handleDelete} disabled={isLoading}>
               Excluir
             </Button>
           </DialogFooter>

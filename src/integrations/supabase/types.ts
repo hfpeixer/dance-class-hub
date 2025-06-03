@@ -480,36 +480,42 @@ export type Database = {
       }
       teachers: {
         Row: {
+          commission_per_student: number | null
           created_at: string
           email: string | null
           hire_date: string | null
           id: string
           name: string
           notes: string | null
+          payment_type: string | null
           phone: string | null
           salary: number | null
           specialties: string[] | null
           status: string
         }
         Insert: {
+          commission_per_student?: number | null
           created_at?: string
           email?: string | null
           hire_date?: string | null
           id?: string
           name: string
           notes?: string | null
+          payment_type?: string | null
           phone?: string | null
           salary?: number | null
           specialties?: string[] | null
           status?: string
         }
         Update: {
+          commission_per_student?: number | null
           created_at?: string
           email?: string | null
           hire_date?: string | null
           id?: string
           name?: string
           notes?: string | null
+          payment_type?: string | null
           phone?: string | null
           salary?: number | null
           specialties?: string[] | null

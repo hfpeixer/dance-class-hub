@@ -13,6 +13,8 @@ export interface Teacher {
   hire_date?: string;
   status: "active" | "inactive";
   notes?: string;
+  payment_type?: "fixed" | "commission" | "mixed";
+  commission_per_student?: number;
   created_at?: string;
 }
 
@@ -44,6 +46,8 @@ export const useTeachers = () => {
             hire_date: teacher.hire_date || '',
             status: teacher.status as "active" | "inactive",
             notes: teacher.notes || '',
+            payment_type: teacher.payment_type || 'fixed',
+            commission_per_student: teacher.commission_per_student || 0,
             created_at: teacher.created_at
           }));
           
@@ -74,7 +78,9 @@ export const useTeachers = () => {
         salary: teacher.salary,
         hire_date: teacher.hire_date && teacher.hire_date.trim() !== '' ? teacher.hire_date : null,
         status: teacher.status,
-        notes: teacher.notes
+        notes: teacher.notes,
+        payment_type: teacher.payment_type || 'fixed',
+        commission_per_student: teacher.commission_per_student || 0
       };
       
       const { data, error } = await supabase
@@ -95,6 +101,8 @@ export const useTeachers = () => {
           hire_date: data[0].hire_date || '',
           status: data[0].status as "active" | "inactive",
           notes: data[0].notes || '',
+          payment_type: data[0].payment_type || 'fixed',
+          commission_per_student: data[0].commission_per_student || 0,
           created_at: data[0].created_at
         };
         
@@ -127,6 +135,8 @@ export const useTeachers = () => {
       }
       if (updatedTeacher.status !== undefined) dbTeacher.status = updatedTeacher.status;
       if (updatedTeacher.notes !== undefined) dbTeacher.notes = updatedTeacher.notes;
+      if (updatedTeacher.payment_type !== undefined) dbTeacher.payment_type = updatedTeacher.payment_type;
+      if (updatedTeacher.commission_per_student !== undefined) dbTeacher.commission_per_student = updatedTeacher.commission_per_student;
       
       const { error } = await supabase
         .from('teachers')

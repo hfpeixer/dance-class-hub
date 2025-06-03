@@ -41,6 +41,8 @@ const teacherFormSchema = z.object({
   email: z.string().email("Email inválido").optional().or(z.literal("")),
   phone: z.string().optional(),
   salary: z.coerce.number().min(0).optional(),
+  payment_type: z.enum(["fixed", "commission", "mixed"]).default("fixed"),
+  commission_per_student: z.coerce.number().min(0).optional(),
 });
 
 const TeachersPage = () => {
@@ -57,8 +59,12 @@ const TeachersPage = () => {
       email: "",
       phone: "",
       salary: 0,
+      payment_type: "fixed",
+      commission_per_student: 0,
     },
   });
+
+  const paymentType = form.watch("payment_type");
 
   const onOpenDialog = (teacher?: Teacher) => {
     if (teacher) {
@@ -67,6 +73,8 @@ const TeachersPage = () => {
       form.setValue("email", teacher.email || "");
       form.setValue("phone", teacher.phone || "");
       form.setValue("salary", teacher.salary || 0);
+      form.setValue("payment_type", (teacher as any).payment_type || "fixed");
+      form.setValue("commission_per_student", (teacher as any).commission_per_student || 0);
     } else {
       setEditingTeacher(null);
       form.reset();
@@ -86,15 +94,19 @@ const TeachersPage = () => {
         email: values.email,
         phone: values.phone,
         salary: values.salary,
-      });
+        payment_type: values.payment_type,
+        commission_per_student: values.commission_per_student,
+      } as any);
     } else {
       await addTeacher({
         name: values.name,
         email: values.email,
         phone: values.phone,
         salary: values.salary,
+        payment_type: values.payment_type,
+        commission_per_student: values.commission_per_student,
         status: "active",
-      });
+      } as any);
     }
     onCloseDialog();
   };
@@ -119,6 +131,15 @@ const TeachersPage = () => {
       .join("")
       .toUpperCase()
       .substring(0, 2);
+  };
+
+  const getPaymentTypeLabel = (type: string) => {
+    switch (type) {
+      case 'fixed': return 'Salário Fixo';
+      case 'commission': return 'Comissão';
+      case 'mixed': return 'Misto';
+      default: return 'Não definido';
+    }
   };
 
   return (
@@ -169,9 +190,14 @@ const TeachersPage = () => {
                   </Avatar>
                   <div>
                     <h3 className="text-xl font-semibold">{teacher.name}</h3>
-                    <Badge variant="outline" className="mt-1">
-                      {teacher.status === 'active' ? 'Ativo' : 'Inativo'}
-                    </Badge>
+                    <div className="flex gap-2 mt-1">
+                      <Badge variant="outline">
+                        {teacher.status === 'active' ? 'Ativo' : 'Inativo'}
+                      </Badge>
+                      <Badge variant="secondary">
+                        {getPaymentTypeLabel((teacher as any).payment_type || 'fixed')}
+                      </Badge>
+                    </div>
                   </div>
                 </div>
                 
@@ -188,10 +214,18 @@ const TeachersPage = () => {
                       <p className="font-medium">{teacher.phone}</p>
                     </div>
                   )}
-                  {teacher.salary && (
+                  {teacher.salary && teacher.salary > 0 && (
                     <div>
-                      <p className="text-muted-foreground">Salário</p>
+                      <p className="text-muted-foreground">
+                        {(teacher as any).payment_type === 'commission' ? 'Comissão por Aluno' : 'Salário'}
+                      </p>
                       <p className="font-medium">R$ {teacher.salary.toFixed(2)}</p>
+                    </div>
+                  )}
+                  {(teacher as any).commission_per_student && (teacher as any).commission_per_student > 0 && (
+                    <div>
+                      <p className="text-muted-foreground">Comissão por Aluno</p>
+                      <p className="font-medium">R$ {(teacher as any).commission_per_student.toFixed(2)}</p>
                     </div>
                   )}
                 </div>
@@ -276,23 +310,68 @@ const TeachersPage = () => {
               />
               <FormField
                 control={form.control}
-                name="salary"
+                name="payment_type"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Salário (R$)</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        step="0.01"
-                        min="0"
-                        placeholder="0.00"
-                        {...field}
-                      />
-                    </FormControl>
+                    <FormLabel>Tipo de Pagamento</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o tipo de pagamento" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="fixed">Salário Fixo</SelectItem>
+                        <SelectItem value="commission">Comissão por Aluno</SelectItem>
+                        <SelectItem value="mixed">Misto (Salário + Comissão)</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+              {(paymentType === "fixed" || paymentType === "mixed") && (
+                <FormField
+                  control={form.control}
+                  name="salary"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Salário Fixo (R$)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          step="0.01"
+                          min="0"
+                          placeholder="0.00"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+              {(paymentType === "commission" || paymentType === "mixed") && (
+                <FormField
+                  control={form.control}
+                  name="commission_per_student"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Comissão por Aluno (R$)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          step="0.01"
+                          min="0"
+                          placeholder="0.00"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={onCloseDialog}>
                   Cancelar
