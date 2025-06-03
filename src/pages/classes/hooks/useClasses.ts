@@ -33,7 +33,7 @@ export const useClasses = () => {
           .from('classes')
           .select(`
             *,
-            modality:modalities (
+            modality:modalities!modality_id (
               id,
               name
             )
@@ -89,7 +89,7 @@ export const useClasses = () => {
         })
         .select(`
           *,
-          modality:modalities (
+          modality:modalities!modality_id (
             id,
             name
           )
@@ -143,7 +143,7 @@ export const useClasses = () => {
         .eq('id', id)
         .select(`
           *,
-          modality:modalities (
+          modality:modalities!modality_id (
             id,
             name
           )
