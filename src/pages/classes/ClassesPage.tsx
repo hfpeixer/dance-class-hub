@@ -96,7 +96,7 @@ const ClassesPage = () => {
       setEditingClass(classItem);
       form.setValue("name", classItem.name);
       form.setValue("modality_id", classItem.modality_id);
-      form.setValue("teacher", classItem.teacher || "");
+      form.setValue("teacher", classItem.teacher || "none");
       form.setValue("schedule", classItem.schedule);
       form.setValue("max_students", classItem.max_students || 15);
     } else {
@@ -113,11 +113,13 @@ const ClassesPage = () => {
 
   const onSubmit = async (values: z.infer<typeof classFormSchema>) => {
     try {
+      const teacherValue = values.teacher === "none" ? undefined : values.teacher;
+      
       if (editingClass) {
         await updateClass(editingClass.id, {
           name: values.name,
           modality_id: values.modality_id,
-          teacher: values.teacher,
+          teacher: teacherValue,
           schedule: values.schedule,
           max_students: values.max_students,
         });
@@ -125,7 +127,7 @@ const ClassesPage = () => {
         await addClass({
           name: values.name,
           modality_id: values.modality_id,
-          teacher: values.teacher,
+          teacher: teacherValue,
           schedule: values.schedule,
           max_students: values.max_students,
           current_students: 0,
@@ -326,7 +328,7 @@ const ClassesPage = () => {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">Sem professor atribuído</SelectItem>
+                        <SelectItem value="none">Sem professor atribuído</SelectItem>
                         {teachers.filter(t => t.status === 'active').map((teacher) => (
                           <SelectItem key={teacher.id} value={teacher.name}>
                             {teacher.name}
