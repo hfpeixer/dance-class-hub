@@ -18,6 +18,10 @@ export interface Teacher {
   created_at?: string;
 }
 
+const isValidPaymentType = (value: string | null): value is "fixed" | "commission" | "mixed" => {
+  return value === "fixed" || value === "commission" || value === "mixed";
+};
+
 export const useTeachers = () => {
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -46,7 +50,7 @@ export const useTeachers = () => {
             hire_date: teacher.hire_date || '',
             status: teacher.status as "active" | "inactive",
             notes: teacher.notes || '',
-            payment_type: teacher.payment_type || 'fixed',
+            payment_type: isValidPaymentType(teacher.payment_type) ? teacher.payment_type : 'fixed',
             commission_per_student: teacher.commission_per_student || 0,
             created_at: teacher.created_at
           }));
@@ -101,7 +105,7 @@ export const useTeachers = () => {
           hire_date: data[0].hire_date || '',
           status: data[0].status as "active" | "inactive",
           notes: data[0].notes || '',
-          payment_type: data[0].payment_type || 'fixed',
+          payment_type: isValidPaymentType(data[0].payment_type) ? data[0].payment_type : 'fixed',
           commission_per_student: data[0].commission_per_student || 0,
           created_at: data[0].created_at
         };
