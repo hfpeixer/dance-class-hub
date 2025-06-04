@@ -1,7 +1,7 @@
 
 import React from "react";
-import { Bell, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,99 +10,103 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { LogOut, Settings, User } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
-export const Header: React.FC = () => {
-  const { user, logout } = useAuth();
+export function Header() {
+  const { profile, userRole, logout } = useAuth();
 
-  if (!user) return null;
-
-  const getInitials = (name: string): string => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .substring(0, 2);
+  const handleLogout = () => {
+    logout();
   };
 
+  const getRoleBadgeColor = (role: string) => {
+    switch (role) {
+      case "admin":
+        return "bg-red-500";
+      case "secretary":
+        return "bg-blue-500";
+      case "financial":
+        return "bg-green-500";
+      case "teacher":
+        return "bg-purple-500";
+      default:
+        return "bg-gray-500";
+    }
+  };
+
+  const getRoleLabel = (role: string) => {
+    switch (role) {
+      case "admin":
+        return "Administrador";
+      case "secretary":
+        return "Secretária";
+      case "financial":
+        return "Financeiro";
+      case "teacher":
+        return "Professor";
+      default:
+        return role;
+    }
+  };
+
+  if (!profile) {
+    return null;
+  }
+
   return (
-    <header className="flex h-16 items-center justify-between border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 md:px-6">
-      <div className="flex-1">
-        <div className="relative md:w-64">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <input
-            type="search"
-            placeholder="Search..."
-            className="w-full rounded-md border border-input bg-background pl-8 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          />
-        </div>
-      </div>
-
+    <header className="h-16 border-b border-border bg-card px-6 flex items-center justify-between">
       <div className="flex items-center space-x-4">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="h-5 w-5" />
-              <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-dance-primary text-xs font-semibold flex items-center justify-center text-white">
-                3
-              </span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-80">
-            <DropdownMenuLabel>Notificações</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="cursor-pointer">
-              <div className="flex flex-col gap-1">
-                <span className="font-medium">Mensalidade em atraso</span>
-                <span className="text-xs text-muted-foreground">Aluno: Maria Silva - Vencimento: 10/05/2023</span>
-              </div>
-            </DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer">
-              <div className="flex flex-col gap-1">
-                <span className="font-medium">Nova inscrição</span>
-                <span className="text-xs text-muted-foreground">Aluno: João Costa se inscreveu na turma de Ballet</span>
-              </div>
-            </DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer">
-              <div className="flex flex-col gap-1">
-                <span className="font-medium">Pagamento recebido</span>
-                <span className="text-xs text-muted-foreground">Mensalidade de Pedro Santos - R$ 150,00</span>
-              </div>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-
+        <h2 className="text-lg font-semibold">Sistema de Gestão</h2>
+      </div>
+      
+      <div className="flex items-center space-x-4">
+        {userRole && (
+          <Badge className={`${getRoleBadgeColor(userRole)} text-white`}>
+            {getRoleLabel(userRole)}
+          </Badge>
+        )}
+        
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-8 w-8 rounded-full">
               <Avatar className="h-8 w-8">
-                <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
+                <AvatarImage src={profile.avatar} alt={profile.name} />
+                <AvatarFallback>
+                  {profile.name?.charAt(0).toUpperCase() || "U"}
+                </AvatarFallback>
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent className="w-56" align="end" forceMount>
             <DropdownMenuLabel className="font-normal">
-              <div className="flex flex-col">
-                <span className="font-medium">{user.name}</span>
-                <span className="text-xs text-muted-foreground">{user.email}</span>
+              <div className="flex flex-col space-y-1">
+                <p className="text-sm font-medium leading-none">
+                  {profile.name}
+                </p>
+                <p className="text-xs leading-none text-muted-foreground">
+                  {profile.email}
+                </p>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
-              <span className="capitalize">{user.role}</span>
+              <User className="mr-2 h-4 w-4" />
+              <span>Perfil</span>
             </DropdownMenuItem>
-            <DropdownMenuItem>Meu perfil</DropdownMenuItem>
-            <DropdownMenuItem>Configurações</DropdownMenuItem>
+            <DropdownMenuItem>
+              <Settings className="mr-2 h-4 w-4" />
+              <span>Configurações</span>
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => logout()}>
-              Sair
+            <DropdownMenuItem onClick={handleLogout}>
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>Sair</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
     </header>
   );
-};
+}
