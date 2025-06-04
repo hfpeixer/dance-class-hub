@@ -11,7 +11,7 @@ import { StatsCard } from "@/components/dashboard/StatsCard";
 import { Progress } from "@/components/ui/progress";
 
 const Index = () => {
-  const { user } = useAuth();
+  const { profile } = useAuth();
 
   // Mock data for the dashboard
   const stats = {
@@ -32,12 +32,12 @@ const Index = () => {
     ],
   };
 
-  if (!user) return null;
+  if (!profile) return null;
 
   return (
     <div className="p-6 animate-fade-in">
       <PageTitle
-        title={`Bem-vindo, ${user.name}`}
+        title={`Bem-vindo, ${profile.name}`}
         subtitle="Painel de controle da escola de dança"
         icon={BarChart3}
       >
