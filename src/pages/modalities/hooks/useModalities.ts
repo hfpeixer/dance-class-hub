@@ -1,7 +1,7 @@
 
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export interface Modality {
   id: string;
@@ -9,135 +9,167 @@ export interface Modality {
   description?: string;
   monthly_fee: number;
   enrollment_fee: number;
-  created_at?: string;
+  created_at: string;
+  students?: number;
+  classes?: number;
+  colorClass?: string;
 }
 
 export const useModalities = () => {
   const [modalities, setModalities] = useState<Modality[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  useEffect(() => {
-    const fetchModalities = async () => {
+  const colors = [
+    'bg-modalidades-ballet',
+    'bg-modalidades-jazz', 
+    'bg-modalidades-ginastica',
+    'bg-modalidades-ritmica',
+    'bg-modalidades-futsal',
+    'bg-blue-100',
+    'bg-green-100',
+    'bg-yellow-100'
+  ];
+
+  const fetchModalities = async () => {
+    try {
       setIsLoading(true);
       setError(null);
-      
-      try {
-        const { data, error } = await supabase
-          .from('modalities')
-          .select('*');
-        
-        if (error) throw error;
-        
-        if (data) {
-          setModalities(data);
-        }
-        
-        setIsLoading(false);
-      } catch (err) {
-        console.error("Error fetching modalities:", err);
-        setError(err instanceof Error ? err : new Error('Failed to fetch modalities'));
-        setIsLoading(false);
-        toast.error("Erro ao carregar modalidades");
-      }
-    };
-    
-    fetchModalities();
-  }, []);
 
-  const addModality = async (modality: Omit<Modality, "id">) => {
-    setIsLoading(true);
-    
-    try {
       const { data, error } = await supabase
         .from('modalities')
-        .insert({
-          name: modality.name,
-          description: modality.description,
-          monthly_fee: modality.monthly_fee,
-          enrollment_fee: modality.enrollment_fee
-        })
-        .select();
-      
+        .select('*')
+        .order('created_at', { ascending: true });
+
       if (error) throw error;
-      
-      if (data && data.length > 0) {
-        setModalities(prevModalities => [...prevModalities, data[0]]);
-        toast.success("Modalidade adicionada com sucesso");
-      }
-      
-      setIsLoading(false);
+
+      // Fetch student counts for each modality
+      const modalitiesWithStats = await Promise.all(
+        (data || []).map(async (modality, index) => {
+          // Get student count
+          const { data: enrollments, error: enrollmentError } = await supabase
+            .from('enrollments')
+            .select('id')
+            .eq('modality_id', modality.id)
+            .eq('status', 'active');
+
+          if (enrollmentError) {
+            console.error('Error fetching enrollment count:', enrollmentError);
+          }
+
+          // Get class count
+          const { data: classes, error: classError } = await supabase
+            .from('classes')
+            .select('id')
+            .eq('modality_id', modality.id);
+
+          if (classError) {
+            console.error('Error fetching class count:', classError);
+          }
+
+          return {
+            ...modality,
+            students: enrollments?.length || 0,
+            classes: classes?.length || 0,
+            colorClass: colors[index % colors.length]
+          };
+        })
+      );
+
+      setModalities(modalitiesWithStats);
     } catch (err) {
-      console.error("Error adding modality:", err);
-      setError(err instanceof Error ? err : new Error('Failed to add modality'));
+      console.error('Error fetching modalities:', err);
+      setError(err instanceof Error ? err : new Error('Failed to fetch modalities'));
+      toast.error('Erro ao carregar modalidades');
+    } finally {
       setIsLoading(false);
-      toast.error("Erro ao adicionar modalidade");
     }
   };
 
-  const updateModality = async (id: string, updatedModality: Partial<Modality>) => {
-    setIsLoading(true);
-    
+  const addModality = async (modalityData: Omit<Modality, 'id' | 'created_at' | 'students' | 'classes' | 'colorClass'>) => {
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('modalities')
-        .update({
-          name: updatedModality.name,
-          description: updatedModality.description,
-          monthly_fee: updatedModality.monthly_fee,
-          enrollment_fee: updatedModality.enrollment_fee
-        })
-        .eq('id', id);
-      
+        .insert(modalityData)
+        .select()
+        .single();
+
       if (error) throw error;
-      
-      setModalities(prevModalities => 
-        prevModalities.map(modality => 
-          modality.id === id ? { ...modality, ...updatedModality } : modality
-        )
-      );
-      
-      toast.success("Modalidade atualizada com sucesso");
-      setIsLoading(false);
-    } catch (err) {
-      console.error("Error updating modality:", err);
-      setError(err instanceof Error ? err : new Error('Failed to update modality'));
-      setIsLoading(false);
-      toast.error("Erro ao atualizar modalidade");
+
+      toast.success('Modalidade criada com sucesso!');
+      await fetchModalities(); // Refresh the list
+      return data;
+    } catch (error) {
+      console.error('Error creating modality:', error);
+      toast.error('Erro ao criar modalidade');
+      throw error;
+    }
+  };
+
+  const updateModality = async (id: string, modalityData: Partial<Modality>) => {
+    try {
+      const { data, error } = await supabase
+        .from('modalities')
+        .update(modalityData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast.success('Modalidade atualizada com sucesso!');
+      await fetchModalities(); // Refresh the list
+      return data;
+    } catch (error) {
+      console.error('Error updating modality:', error);
+      toast.error('Erro ao atualizar modalidade');
+      throw error;
     }
   };
 
   const deleteModality = async (id: string) => {
-    setIsLoading(true);
-    
     try {
+      // Check if modality has any enrollments
+      const { data: enrollments, error: checkError } = await supabase
+        .from('enrollments')
+        .select('id')
+        .eq('modality_id', id)
+        .limit(1);
+
+      if (checkError) throw checkError;
+
+      if (enrollments && enrollments.length > 0) {
+        toast.error('Não é possível excluir uma modalidade que possui matrículas ativas');
+        return;
+      }
+
       const { error } = await supabase
         .from('modalities')
         .delete()
         .eq('id', id);
-      
+
       if (error) throw error;
-      
-      setModalities(prevModalities => 
-        prevModalities.filter(modality => modality.id !== id)
-      );
-      
-      toast.success("Modalidade removida com sucesso");
-      setIsLoading(false);
-    } catch (err) {
-      console.error("Error deleting modality:", err);
-      setError(err instanceof Error ? err : new Error('Failed to delete modality'));
-      setIsLoading(false);
-      toast.error("Erro ao remover modalidade");
+
+      toast.success('Modalidade removida com sucesso!');
+      await fetchModalities(); // Refresh the list
+    } catch (error) {
+      console.error('Error deleting modality:', error);
+      toast.error('Erro ao remover modalidade');
+      throw error;
     }
   };
 
+  useEffect(() => {
+    fetchModalities();
+  }, []);
+
   return {
     modalities,
+    isLoading,
+    error,
     addModality,
     updateModality,
     deleteModality,
-    isLoading,
-    error
+    refetch: fetchModalities
   };
 };

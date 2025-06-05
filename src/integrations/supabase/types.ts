@@ -67,6 +67,7 @@ export type Database = {
           name: string
           schedule: string
           teacher: string | null
+          weekdays: string[] | null
         }
         Insert: {
           created_at?: string
@@ -77,6 +78,7 @@ export type Database = {
           name: string
           schedule: string
           teacher?: string | null
+          weekdays?: string[] | null
         }
         Update: {
           created_at?: string
@@ -87,6 +89,7 @@ export type Database = {
           name?: string
           schedule?: string
           teacher?: string | null
+          weekdays?: string[] | null
         }
         Relationships: [
           {

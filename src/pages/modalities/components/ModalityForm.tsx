@@ -1,74 +1,57 @@
 
 import React from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Form,
+  FormControl,
   FormField,
   FormItem,
   FormLabel,
-  FormControl,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { DialogFooter } from "@/components/ui/dialog";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
 
 const modalityFormSchema = z.object({
-  name: z.string().min(1, "Nome da modalidade é obrigatório"),
-  monthlyFee: z.coerce.number().min(0, "Valor deve ser positivo"),
-  colorClass: z.string(),
+  name: z.string().min(1, "Nome é obrigatório"),
+  description: z.string().optional(),
+  monthly_fee: z.number().min(0, "Mensalidade deve ser um valor positivo"),
+  enrollment_fee: z.number().min(0, "Taxa de matrícula deve ser um valor positivo"),
 });
 
-interface Modality {
-  id: string;
-  name: string;
-  monthlyFee: number;
-  colorClass: string;
-}
+type ModalityFormValues = z.infer<typeof modalityFormSchema>;
 
 interface ModalityFormProps {
-  initialData?: Modality | null;
-  onSubmit: (data: z.infer<typeof modalityFormSchema>) => void;
+  initialData?: any;
+  onSubmit: (data: ModalityFormValues) => void;
   onCancel: () => void;
 }
-
-const colorOptions = [
-  { label: "Ballet (Rosa)", value: "bg-modalidades-ballet" },
-  { label: "Jazz (Roxo)", value: "bg-modalidades-jazz" },
-  { label: "Ginástica (Azul)", value: "bg-modalidades-ginastica" },
-  { label: "Rítmica (Verde)", value: "bg-modalidades-ritmica" },
-  { label: "Futsal (Vermelho)", value: "bg-modalidades-futsal" },
-  { label: "Amarelo", value: "bg-yellow-500" },
-  { label: "Laranja", value: "bg-orange-500" },
-  { label: "Azul Claro", value: "bg-sky-500" },
-];
 
 export const ModalityForm: React.FC<ModalityFormProps> = ({
   initialData,
   onSubmit,
   onCancel,
 }) => {
-  const form = useForm<z.infer<typeof modalityFormSchema>>({
+  const form = useForm<ModalityFormValues>({
     resolver: zodResolver(modalityFormSchema),
     defaultValues: {
       name: initialData?.name || "",
-      monthlyFee: initialData?.monthlyFee || 0,
-      colorClass: initialData?.colorClass || "bg-modalidades-ballet",
+      description: initialData?.description || "",
+      monthly_fee: initialData?.monthly_fee || 0,
+      enrollment_fee: initialData?.enrollment_fee || 0,
     },
   });
 
+  const handleSubmit = (data: ModalityFormValues) => {
+    onSubmit(data);
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="name"
@@ -76,24 +59,22 @@ export const ModalityForm: React.FC<ModalityFormProps> = ({
             <FormItem>
               <FormLabel>Nome da Modalidade</FormLabel>
               <FormControl>
-                <Input placeholder="Ex: Ballet, Jazz, Futsal" {...field} />
+                <Input placeholder="Ex: Ballet Clássico" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
+
         <FormField
           control={form.control}
-          name="monthlyFee"
+          name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Valor da Mensalidade (R$)</FormLabel>
+              <FormLabel>Descrição</FormLabel>
               <FormControl>
-                <Input 
-                  type="number" 
-                  step="0.01"
-                  min="0"
-                  placeholder="0.00"
+                <Textarea 
+                  placeholder="Descrição da modalidade"
                   {...field}
                 />
               </FormControl>
@@ -101,48 +82,55 @@ export const ModalityForm: React.FC<ModalityFormProps> = ({
             </FormItem>
           )}
         />
+
         <FormField
           control={form.control}
-          name="colorClass"
+          name="monthly_fee"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Cor da Modalidade</FormLabel>
-              <Select 
-                onValueChange={field.onChange} 
-                defaultValue={field.value}
-                value={field.value}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <div className="flex items-center gap-2">
-                      <div className={`w-4 h-4 rounded-full ${field.value}`} />
-                      <SelectValue placeholder="Selecione uma cor" />
-                    </div>
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {colorOptions.map((color) => (
-                    <SelectItem key={color.value} value={color.value}>
-                      <div className="flex items-center gap-2">
-                        <div className={`w-4 h-4 rounded-full ${color.value}`} />
-                        <span>{color.label}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <FormLabel>Mensalidade (R$)</FormLabel>
+              <FormControl>
+                <Input
+                  type="number"
+                  step="0.01"
+                  placeholder="0.00"
+                  {...field}
+                  onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        <DialogFooter>
+
+        <FormField
+          control={form.control}
+          name="enrollment_fee"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Taxa de Matrícula (R$)</FormLabel>
+              <FormControl>
+                <Input
+                  type="number"
+                  step="0.01"
+                  placeholder="0.00"
+                  {...field}
+                  onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="flex justify-end space-x-2 pt-4">
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancelar
           </Button>
           <Button type="submit" className="bg-dance-primary hover:bg-dance-secondary">
-            {initialData ? "Salvar Alterações" : "Cadastrar Modalidade"}
+            {initialData ? "Atualizar" : "Cadastrar"}
           </Button>
-        </DialogFooter>
+        </div>
       </form>
     </Form>
   );

@@ -14,60 +14,10 @@ import {
 import { toast } from "sonner";
 import { ModalityForm } from "./components/ModalityForm";
 import { ModalityCard } from "./components/ModalityCard";
-
-interface Modality {
-  id: string;
-  name: string;
-  monthlyFee: number;
-  students: number;
-  classes: number;
-  colorClass: string;
-}
+import { useModalities, Modality } from "./hooks/useModalities";
 
 const ModalitiesPage = () => {
-  const [modalities, setModalities] = useState<Modality[]>([
-    {
-      id: "1",
-      name: "Ballet",
-      monthlyFee: 150,
-      students: 45,
-      classes: 4,
-      colorClass: "bg-modalidades-ballet",
-    },
-    {
-      id: "2",
-      name: "Jazz",
-      monthlyFee: 140,
-      students: 30,
-      classes: 3,
-      colorClass: "bg-modalidades-jazz",
-    },
-    {
-      id: "3",
-      name: "Ginástica Artística",
-      monthlyFee: 160,
-      students: 25,
-      classes: 3,
-      colorClass: "bg-modalidades-ginastica",
-    },
-    {
-      id: "4",
-      name: "Ginástica Rítmica",
-      monthlyFee: 160,
-      students: 20,
-      classes: 2,
-      colorClass: "bg-modalidades-ritmica",
-    },
-    {
-      id: "5",
-      name: "Futsal",
-      monthlyFee: 120,
-      students: 35,
-      classes: 4,
-      colorClass: "bg-modalidades-futsal",
-    },
-  ]);
-
+  const { modalities, isLoading, addModality, updateModality, deleteModality } = useModalities();
   const [openDialog, setOpenDialog] = useState(false);
   const [editingModality, setEditingModality] = useState<Modality | null>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -83,26 +33,17 @@ const ModalitiesPage = () => {
     setEditingModality(null);
   };
 
-  const handleSubmit = (values: any) => {
-    if (editingModality) {
-      const updatedModalities = modalities.map((m) =>
-        m.id === editingModality.id
-          ? { ...m, ...values }
-          : m
-      );
-      setModalities(updatedModalities);
-      toast.success("Modalidade atualizada com sucesso!");
-    } else {
-      const newModality: Modality = {
-        id: Date.now().toString(),
-        ...values,
-        students: 0,
-        classes: 0,
-      };
-      setModalities([...modalities, newModality]);
-      toast.success("Modalidade cadastrada com sucesso!");
+  const handleSubmit = async (values: any) => {
+    try {
+      if (editingModality) {
+        await updateModality(editingModality.id, values);
+      } else {
+        await addModality(values);
+      }
+      handleCloseDialog();
+    } catch (error) {
+      // Error is already handled in the hook
     }
-    handleCloseDialog();
   };
 
   const confirmDelete = (id: string) => {
@@ -110,14 +51,32 @@ const ModalitiesPage = () => {
     setDeleteConfirmOpen(true);
   };
 
-  const deleteModality = () => {
+  const handleDelete = async () => {
     if (modalityToDelete) {
-      setModalities(modalities.filter((m) => m.id !== modalityToDelete));
-      toast.success("Modalidade removida com sucesso!");
-      setDeleteConfirmOpen(false);
-      setModalityToDelete(null);
+      try {
+        await deleteModality(modalityToDelete);
+        setDeleteConfirmOpen(false);
+        setModalityToDelete(null);
+      } catch (error) {
+        // Error is already handled in the hook
+      }
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="p-6">
+        <PageTitle
+          title="Modalidades"
+          subtitle="Gerencie as modalidades de dança e esportes oferecidas"
+          icon={Music2}
+        />
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6">
@@ -134,16 +93,34 @@ const ModalitiesPage = () => {
         </Button>
       </PageTitle>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {modalities.map((modality) => (
-          <ModalityCard
-            key={modality.id}
-            modality={modality}
-            onEdit={handleOpenDialog}
-            onDelete={confirmDelete}
-          />
-        ))}
-      </div>
+      {modalities.length === 0 ? (
+        <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
+          <Music2 className="h-16 w-16 text-gray-400 mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            Nenhuma modalidade cadastrada
+          </h3>
+          <p className="text-gray-500 mb-4">
+            Comece criando a primeira modalidade da sua escola.
+          </p>
+          <Button 
+            className="bg-dance-primary hover:bg-dance-secondary"
+            onClick={() => handleOpenDialog()}
+          >
+            <Plus className="mr-2 h-4 w-4" /> Nova Modalidade
+          </Button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {modalities.map((modality) => (
+            <ModalityCard
+              key={modality.id}
+              modality={modality}
+              onEdit={handleOpenDialog}
+              onDelete={confirmDelete}
+            />
+          ))}
+        </div>
+      )}
 
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
         <DialogContent className="sm:max-w-[500px]">
@@ -171,13 +148,14 @@ const ModalitiesPage = () => {
             <DialogTitle>Confirmar exclusão</DialogTitle>
             <DialogDescription>
               Tem certeza que deseja excluir esta modalidade? Esta ação não pode ser desfeita.
+              Modalidades com matrículas ativas não podem ser excluídas.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)}>
               Cancelar
             </Button>
-            <Button variant="destructive" onClick={deleteModality}>
+            <Button variant="destructive" onClick={handleDelete}>
               Excluir
             </Button>
           </DialogFooter>
