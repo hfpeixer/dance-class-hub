@@ -505,6 +505,36 @@ export type Database = {
         }
         Relationships: []
       }
+      system_logs: {
+        Row: {
+          action: string
+          created_at: string
+          details: string | null
+          id: string
+          resource: string
+          resource_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          resource: string
+          resource_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          resource?: string
+          resource_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       teachers: {
         Row: {
           commission_per_student: number | null
@@ -619,9 +649,26 @@ export type Database = {
         Args: { birth_date: string }
         Returns: number
       }
+      can_manage_users: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: Database["public"]["Enums"]["app_role"]
+      }
+      get_user_management_data: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          email: string
+          name: string
+          avatar: string
+          role: Database["public"]["Enums"]["app_role"]
+          created_at: string
+          last_sign_in_at: string
+          email_confirmed_at: string
+        }[]
       }
       has_role: {
         Args: {
@@ -629,6 +676,15 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
         }
         Returns: boolean
+      }
+      log_user_action: {
+        Args: {
+          _action: string
+          _resource: string
+          _resource_id?: string
+          _details?: string
+        }
+        Returns: undefined
       }
     }
     Enums: {

@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+
+import React, { useState } from "react";
 import { Settings, UserPlus, Search, Shield, Clock, Trash2, Edit, CheckCircle, XCircle, MoreHorizontal } from "lucide-react";
 import { PageTitle } from "@/components/layout/PageTitle";
 import { Button } from "@/components/ui/button";
@@ -14,9 +15,6 @@ import {
 import { 
   Card, 
   CardContent, 
-  CardHeader, 
-  CardTitle, 
-  CardDescription 
 } from "@/components/ui/card";
 import {
   Dialog,
@@ -61,142 +59,37 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { cn } from "@/lib/utils";
-
-// Interfaces para tipagem
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  password: string;
-  role: "admin" | "secretary" | "financial" | "teacher";
-  isActive: boolean;
-  createdAt?: string;
-  lastLogin?: string;
-}
-
-export interface LogEntry {
-  id: string;
-  userId: string;
-  userName: string;
-  action: string;
-  resource: string;
-  timestamp: string;
-  details?: string;
-}
-
-// Mock users para demonstração
-const initialUsers: User[] = [
-  {
-    id: "1",
-    name: "Admin Principal",
-    email: "admin@escola.com",
-    password: "senha123",
-    role: "admin",
-    isActive: true,
-    createdAt: "2023-01-01T10:00:00Z",
-    lastLogin: "2024-05-12T08:45:00Z"
-  },
-  {
-    id: "2",
-    name: "Maria Secretária",
-    email: "maria@escola.com",
-    password: "senha456",
-    role: "secretary",
-    isActive: true,
-    createdAt: "2023-02-15T10:00:00Z",
-    lastLogin: "2024-05-10T14:30:00Z"
-  },
-  {
-    id: "3",
-    name: "João Financeiro",
-    email: "joao@escola.com",
-    password: "senha789",
-    role: "financial",
-    isActive: true,
-    createdAt: "2023-03-20T10:00:00Z",
-    lastLogin: "2024-05-11T16:15:00Z"
-  },
-  {
-    id: "4",
-    name: "Ana Professora",
-    email: "ana@escola.com",
-    password: "senha321",
-    role: "teacher",
-    isActive: false,
-    createdAt: "2023-04-10T10:00:00Z",
-    lastLogin: "2024-04-28T09:20:00Z"
-  }
-];
-
-// Mock logs para demonstração
-const initialLogs: LogEntry[] = [
-  {
-    id: "1",
-    userId: "1",
-    userName: "Admin Principal",
-    action: "create",
-    resource: "user",
-    timestamp: "2024-05-12T08:45:00Z",
-    details: "Criou usuário Maria Secretária"
-  },
-  {
-    id: "2",
-    userId: "2",
-    userName: "Maria Secretária",
-    action: "update",
-    resource: "student",
-    timestamp: "2024-05-11T14:30:00Z",
-    details: "Atualizou dados do aluno João Silva"
-  },
-  {
-    id: "3",
-    userId: "3",
-    userName: "João Financeiro",
-    action: "create",
-    resource: "payment",
-    timestamp: "2024-05-11T16:15:00Z",
-    details: "Registrou pagamento de mensalidade"
-  },
-  {
-    id: "4",
-    userId: "1",
-    userName: "Admin Principal",
-    action: "delete",
-    resource: "class",
-    timestamp: "2024-05-10T10:20:00Z",
-    details: "Removeu turma de Ballet Infantil"
-  },
-  {
-    id: "5",
-    userId: "4",
-    userName: "Ana Professora",
-    action: "update",
-    resource: "attendance",
-    timestamp: "2024-05-09T15:00:00Z",
-    details: "Registrou presença dos alunos"
-  }
-];
+import { useUserManagement, DatabaseUser } from "./hooks/useUserManagement";
+import { UserRole } from "@/context/AuthContext";
 
 // Schema para validação de usuário
 const userSchema = z.object({
   name: z.string().min(2, "O nome deve ter pelo menos 2 caracteres"),
   email: z.string().email("Email inválido"),
-  password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
+  password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres").optional(),
   role: z.enum(["admin", "secretary", "financial", "teacher"], {
     required_error: "Selecione um perfil",
   }),
-  isActive: z.boolean().default(true),
 });
 
 const AdminPage = () => {
   const [activeTab, setActiveTab] = useState("users");
-  const [users, setUsers] = useState<User[]>(initialUsers);
-  const [logs, setLogs] = useState<LogEntry[]>(initialLogs);
   const [openUserForm, setOpenUserForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [userToEdit, setUserToEdit] = useState<User | null>(null);
+  const [userToEdit, setUserToEdit] = useState<DatabaseUser | null>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [userIdToDelete, setUserIdToDelete] = useState<string | null>(null);
+  const [userNameToDelete, setUserNameToDelete] = useState<string>("");
+  
+  const { 
+    users, 
+    logs, 
+    isLoading, 
+    createUser, 
+    updateUser, 
+    deleteUser, 
+    toggleUserStatus 
+  } = useUserManagement();
   
   const form = useForm<z.infer<typeof userSchema>>({
     resolver: zodResolver(userSchema),
@@ -205,7 +98,6 @@ const AdminPage = () => {
       email: "",
       password: "",
       role: "secretary",
-      isActive: true,
     },
   });
 
@@ -218,7 +110,6 @@ const AdminPage = () => {
 
   // Filtra logs com base no termo de busca
   const filteredLogs = logs.filter((log) =>
-    log.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     log.action.toLowerCase().includes(searchTerm.toLowerCase()) ||
     log.resource.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (log.details && log.details.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -231,133 +122,76 @@ const AdminPage = () => {
       email: "",
       password: "",
       role: "secretary",
-      isActive: true,
     });
     setUserToEdit(null);
     setOpenUserForm(true);
   };
 
   // Preenche o formulário com os dados do usuário para edição
-  const handleEditUser = (user: User) => {
+  const handleEditUser = (user: DatabaseUser) => {
     form.reset({
       name: user.name,
       email: user.email,
-      password: user.password,
+      password: "", // Não preenchemos a senha para edição
       role: user.role,
-      isActive: user.isActive,
     });
     setUserToEdit(user);
     setOpenUserForm(true);
   };
 
   // Confirma exclusão de usuário
-  const handleDeleteConfirm = (id: string) => {
+  const handleDeleteConfirm = (id: string, name: string) => {
     setUserIdToDelete(id);
+    setUserNameToDelete(name);
     setDeleteConfirmOpen(true);
   };
 
   // Exclui o usuário
-  const handleDeleteUser = () => {
-    if (userIdToDelete) {
-      setUsers(users.filter((user) => user.id !== userIdToDelete));
-      
-      // Adicionar log da ação
-      const newLog: LogEntry = {
-        id: Date.now().toString(),
-        userId: "1", // assumindo que é o admin atual
-        userName: "Admin Principal",
-        action: "delete",
-        resource: "user",
-        timestamp: new Date().toISOString(),
-        details: `Removeu usuário ${users.find(u => u.id === userIdToDelete)?.name}`
-      };
-      
-      setLogs([newLog, ...logs]);
-      toast.success("Usuário removido com sucesso!");
+  const handleDeleteUser = async () => {
+    if (userIdToDelete && userNameToDelete) {
+      await deleteUser(userIdToDelete, userNameToDelete);
       setDeleteConfirmOpen(false);
       setUserIdToDelete(null);
+      setUserNameToDelete("");
     }
   };
 
   // Alterna o status ativo/inativo do usuário
-  const toggleUserStatus = (id: string) => {
-    setUsers(
-      users.map((user) =>
-        user.id === id ? { ...user, isActive: !user.isActive } : user
-      )
-    );
-    
-    const targetUser = users.find((user) => user.id === id);
-    const newStatus = targetUser?.isActive ? "inativo" : "ativo";
-    
-    // Adicionar log da ação
-    const newLog: LogEntry = {
-      id: Date.now().toString(),
-      userId: "1", // assumindo que é o admin atual
-      userName: "Admin Principal",
-      action: "update",
-      resource: "user",
-      timestamp: new Date().toISOString(),
-      details: `Alterou status de ${targetUser?.name} para ${newStatus}`
-    };
-    
-    setLogs([newLog, ...logs]);
-    toast.success(`Status do usuário alterado para ${newStatus}!`);
+  const handleToggleUserStatus = async (user: DatabaseUser) => {
+    // For now, we'll determine active status based on email confirmation
+    const isActive = !!user.email_confirmed_at;
+    await toggleUserStatus(user.id, isActive, user.name);
   };
 
   // Submete o formulário para criar/editar usuário
-  const onSubmit = (data: z.infer<typeof userSchema>) => {
-    if (userToEdit) {
-      // Edita usuário existente
-      setUsers(
-        users.map((user) =>
-          user.id === userToEdit.id ? { ...user, ...data } : user
-        )
-      );
+  const onSubmit = async (data: z.infer<typeof userSchema>) => {
+    try {
+      if (userToEdit) {
+        // Edita usuário existente
+        await updateUser(userToEdit.id, {
+          name: data.name,
+          email: data.email,
+          role: data.role as UserRole,
+        });
+      } else {
+        // Cria novo usuário
+        if (!data.password) {
+          toast.error("Senha é obrigatória para novos usuários");
+          return;
+        }
+        
+        await createUser({
+          name: data.name,
+          email: data.email,
+          password: data.password,
+          role: data.role as UserRole,
+        });
+      }
       
-      // Adicionar log da ação
-      const newLog: LogEntry = {
-        id: Date.now().toString(),
-        userId: "1", // assumindo que é o admin atual
-        userName: "Admin Principal",
-        action: "update",
-        resource: "user",
-        timestamp: new Date().toISOString(),
-        details: `Atualizou dados do usuário ${data.name}`
-      };
-      
-      setLogs([newLog, ...logs]);
-      toast.success("Usuário atualizado com sucesso!");
-    } else {
-      // Cria novo usuário
-      const newUser: User = {
-        id: Date.now().toString(),
-        name: data.name || "",
-        email: data.email || "",
-        role: data.role as "admin" | "secretary" | "financial" | "teacher",
-        password: data.password || "",
-        isActive: true,
-        createdAt: new Date().toISOString()
-      };
-      
-      setUsers([...users, newUser]);
-      
-      // Adicionar log da ação
-      const newLog: LogEntry = {
-        id: Date.now().toString(),
-        userId: "1", // assumindo que é o admin atual
-        userName: "Admin Principal",
-        action: "create",
-        resource: "user",
-        timestamp: new Date().toISOString(),
-        details: `Criou usuário ${data.name}`
-      };
-      
-      setLogs([newLog, ...logs]);
-      toast.success("Usuário criado com sucesso!");
+      setOpenUserForm(false);
+    } catch (error) {
+      // Error handling is done in the hook
     }
-    
-    setOpenUserForm(false);
   };
 
   // Função para traduzir o tipo de perfil para português
@@ -409,6 +243,19 @@ const AdminPage = () => {
       minute: '2-digit'
     }).format(date);
   };
+
+  if (isLoading) {
+    return (
+      <div className="p-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-dance-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Carregando dados...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6">
@@ -492,19 +339,19 @@ const AdminPage = () => {
                               <Badge
                                 variant="outline"
                                 className={
-                                  user.isActive
+                                  user.email_confirmed_at
                                     ? "border-green-500 bg-green-500/10 text-green-700"
                                     : "border-red-500 bg-red-500/10 text-red-700"
                                 }
                               >
-                                {user.isActive ? "Ativo" : "Inativo"}
+                                {user.email_confirmed_at ? "Ativo" : "Inativo"}
                               </Badge>
                             </TableCell>
                             <TableCell>
-                              {user.createdAt ? formatDate(user.createdAt) : "-"}
+                              {user.created_at ? formatDate(user.created_at) : "-"}
                             </TableCell>
                             <TableCell>
-                              {user.lastLogin ? formatDate(user.lastLogin) : "-"}
+                              {user.last_sign_in_at ? formatDate(user.last_sign_in_at) : "-"}
                             </TableCell>
                             <TableCell>
                               <DropdownMenu>
@@ -519,8 +366,8 @@ const AdminPage = () => {
                                   <DropdownMenuItem onClick={() => handleEditUser(user)}>
                                     <Edit className="h-4 w-4 mr-2" /> Editar
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => toggleUserStatus(user.id)}>
-                                    {user.isActive ? (
+                                  <DropdownMenuItem onClick={() => handleToggleUserStatus(user)}>
+                                    {user.email_confirmed_at ? (
                                       <>
                                         <XCircle className="h-4 w-4 mr-2 text-red-500" /> Desativar
                                       </>
@@ -532,7 +379,7 @@ const AdminPage = () => {
                                   </DropdownMenuItem>
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem 
-                                    onClick={() => handleDeleteConfirm(user.id)}
+                                    onClick={() => handleDeleteConfirm(user.id, user.name)}
                                     className="text-destructive focus:text-destructive"
                                   >
                                     <Trash2 className="h-4 w-4 mr-2" /> Excluir
@@ -574,8 +421,8 @@ const AdminPage = () => {
                       ) : (
                         filteredLogs.map((log) => (
                           <TableRow key={log.id}>
-                            <TableCell>{formatDate(log.timestamp)}</TableCell>
-                            <TableCell>{log.userName}</TableCell>
+                            <TableCell>{formatDate(log.created_at)}</TableCell>
+                            <TableCell>{(log as any).userName || "Sistema"}</TableCell>
                             <TableCell>
                               <Badge
                                 variant="outline"
@@ -652,19 +499,21 @@ const AdminPage = () => {
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Senha</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Senha do usuário" type="password" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {!userToEdit && (
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Senha</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Senha do usuário" type="password" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
 
               <FormField
                 control={form.control}
@@ -686,26 +535,6 @@ const AdminPage = () => {
                       </SelectContent>
                     </Select>
                     <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="isActive"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4">
-                    <FormControl>
-                      <input
-                        type="checkbox"
-                        checked={field.value}
-                        onChange={field.onChange}
-                        className="h-4 w-4"
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>Usuário ativo</FormLabel>
-                    </div>
                   </FormItem>
                 )}
               />
