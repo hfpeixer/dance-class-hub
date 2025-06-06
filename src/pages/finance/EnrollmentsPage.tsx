@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { List, Plus } from "lucide-react";
 import { PageTitle } from "@/components/layout/PageTitle";
@@ -30,7 +29,7 @@ const EnrollmentsPage = () => {
         toast.success(`Matrícula atualizada com sucesso!`);
       } else {
         await addEnrollment(enrollmentData);
-        toast.success(`Matrícula registrada com sucesso!`);
+        toast.success(`Matrícula registrada com sucesso! As mensalidades foram geradas automaticamente.`);
       }
       setOpenEnrollmentForm(false);
       setEditingEnrollment(null);
@@ -117,7 +116,7 @@ const EnrollmentsPage = () => {
             <DialogDescription>
               {editingEnrollment
                 ? "Edite as informações da matrícula."
-                : "Preencha as informações para registrar uma nova matrícula."}
+                : "Preencha as informações para registrar uma nova matrícula. As mensalidades serão geradas automaticamente."}
             </DialogDescription>
           </DialogHeader>
           <EnrollmentForm 

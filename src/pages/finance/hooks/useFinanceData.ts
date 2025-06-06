@@ -1,61 +1,30 @@
-
 import { useState, useEffect } from "react";
-import { useStudents } from "./useStudents";
 import { usePayments } from "./usePayments";
-import { useBills } from "./useBills";
 import { useTransactions } from "./useTransactions";
+import { useBills } from "./useBills";
 import { useEnrollments } from "./useEnrollments";
+import { useMonthlyFees } from "./useMonthlyFees";
 
-// Re-export from models for backward compatibility
-export * from "../models/types";
-export * from "../models/constants";
-
-/**
- * Main finance data hook combining all finance-related hooks
- * Uses real Supabase database connections
- */
 export const useFinanceData = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-  
-  const studentsHook = useStudents();
-  const paymentsHook = usePayments();
-  const billsHook = useBills();
-  const transactionsHook = useTransactions();
-  const enrollmentsHook = useEnrollments();
+  const payments = usePayments();
+  const transactions = useTransactions();
+  const bills = useBills();
+  const enrollments = useEnrollments();
+  const monthlyFees = useMonthlyFees();
 
-  // Determine overall loading state and errors
-  useEffect(() => {
-    const loading = 
-      studentsHook.isLoading || 
-      paymentsHook.isLoading || 
-      billsHook.isLoading || 
-      transactionsHook.isLoading || 
-      enrollmentsHook.isLoading;
-    
-    setIsLoading(loading);
-    
-    const firstError = 
-      studentsHook.error || 
-      paymentsHook.error || 
-      billsHook.error || 
-      transactionsHook.error || 
-      enrollmentsHook.error;
-    
-    setError(firstError);
-  }, [
-    studentsHook.isLoading, paymentsHook.isLoading, billsHook.isLoading, transactionsHook.isLoading, enrollmentsHook.isLoading,
-    studentsHook.error, paymentsHook.error, billsHook.error, transactionsHook.error, enrollmentsHook.error
-  ]);
-
-  // Combine all hooks into a single object
   return {
-    ...studentsHook,
-    ...paymentsHook,
-    ...billsHook,
-    ...transactionsHook,
-    ...enrollmentsHook,
-    isLoading,
-    error
+    ...payments,
+    ...transactions,
+    ...bills,
+    ...enrollments,
+    
+    // Add monthly fees functionality
+    monthlyFees: monthlyFees.monthlyFees,
+    markMonthlyFeeAsPaid: monthlyFees.markAsPaid,
+    updateOverdueMonthlyFees: monthlyFees.updateOverdueStatus,
+    getMonthlyFeesByStudent: monthlyFees.getMonthlyFeesByStudent,
+    getMonthlyFeesByStatus: monthlyFees.getMonthlyFeesByStatus,
+    getMonthlyFeesByEnrollment: monthlyFees.getMonthlyFeesByEnrollment,
+    refetchMonthlyFees: monthlyFees.refetch
   };
 };

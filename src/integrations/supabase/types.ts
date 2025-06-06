@@ -241,6 +241,66 @@ export type Database = {
         }
         Relationships: []
       }
+      monthly_fees: {
+        Row: {
+          amount: number
+          created_at: string
+          due_date: string
+          enrollment_id: string
+          id: string
+          month_year: string
+          notes: string | null
+          payment_date: string | null
+          payment_method: string | null
+          status: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          due_date: string
+          enrollment_id: string
+          id?: string
+          month_year: string
+          notes?: string | null
+          payment_date?: string | null
+          payment_method?: string | null
+          status?: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          due_date?: string
+          enrollment_id?: string
+          id?: string
+          month_year?: string
+          notes?: string | null
+          payment_date?: string | null
+          payment_method?: string | null
+          status?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monthly_fees_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "enrollments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "monthly_fees_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payments: {
         Row: {
           category: string | null
@@ -656,6 +716,17 @@ export type Database = {
         Args: { _user_id: string }
         Returns: boolean
       }
+      generate_monthly_fees: {
+        Args: {
+          p_enrollment_id: string
+          p_student_id: string
+          p_monthly_fee: number
+          p_payment_day: number
+          p_start_date?: string
+          p_months_count?: number
+        }
+        Returns: undefined
+      }
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: Database["public"]["Enums"]["app_role"]
@@ -687,6 +758,10 @@ export type Database = {
           _resource_id?: string
           _details?: string
         }
+        Returns: undefined
+      }
+      update_overdue_monthly_fees: {
+        Args: Record<PropertyKey, never>
         Returns: undefined
       }
     }
