@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -27,7 +26,7 @@ import {
   EXPENSE_CATEGORIES, 
   INCOME_CATEGORIES, 
   PAYMENT_METHODS 
-} from "../hooks/useFinanceData";
+} from "../models/constants";
 
 const transactionFormSchema = z.object({
   type: z.enum(["income", "expense"]),

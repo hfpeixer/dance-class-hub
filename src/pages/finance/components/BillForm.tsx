@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -23,7 +22,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Bill, EXPENSE_CATEGORIES, SUPPLIERS } from "../hooks/useFinanceData";
+import { Bill } from "../models/types";
+import { EXPENSE_CATEGORIES, SUPPLIERS } from "../models/constants";
 
 // Define bill schema with zod
 const billSchema = z.object({

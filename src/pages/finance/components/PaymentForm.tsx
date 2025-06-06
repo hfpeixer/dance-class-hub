@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useFinanceData } from "../hooks/useFinanceData";
+import { useStudents } from "../hooks/useStudents";
 import { DialogFooter } from "@/components/ui/dialog";
 
 const paymentFormSchema = z.object({
@@ -48,7 +48,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
   onSubmit,
   onCancel
 }) => {
-  const { students } = useFinanceData();
+  const { students } = useStudents();
 
   const form = useForm<PaymentFormValues>({
     resolver: zodResolver(paymentFormSchema),
