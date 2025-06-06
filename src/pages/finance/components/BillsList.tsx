@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Check, Edit, Trash2, Filter, Calendar } from 'lucide-react';
 import {
@@ -19,10 +18,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Bill } from '../hooks/useFinanceData';
+import { Bill } from '../models/types';
+import { PAYMENT_METHODS } from '../models/constants';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PAYMENT_METHODS } from '../hooks/useFinanceData';
 
 interface BillsListProps {
   bills: Bill[];

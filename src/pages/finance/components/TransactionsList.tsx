@@ -1,16 +1,5 @@
-
-import React, { useState } from "react";
-import { Edit, Trash2, ArrowDown, ArrowUp } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { 
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import React, { useState } from 'react';
+import { Edit, Trash2, TrendingUp, TrendingDown } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -19,17 +8,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Transaction } from "../hooks/useFinanceData";
-import { cn } from "@/lib/utils";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Transaction } from '../models/types';
 
 interface TransactionsListProps {
   transactions: Transaction[];
@@ -37,241 +27,127 @@ interface TransactionsListProps {
   onDelete: (id: string) => void;
 }
 
-export const TransactionsList: React.FC<TransactionsListProps> = ({
+export const TransactionsList = ({
   transactions,
   onEdit,
   onDelete,
-}) => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("all");
-  const [typeFilter, setTypeFilter] = useState("all");
-  const [periodFilter, setPeriodFilter] = useState("month");
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null);
+}: TransactionsListProps) => {
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
-  const confirmDelete = (id: string) => {
-    setTransactionToDelete(id);
-    setDeleteConfirmOpen(true);
+  const handleConfirmDelete = (id: string) => {
+    setConfirmDelete(id);
   };
 
   const handleDelete = () => {
-    if (transactionToDelete) {
-      onDelete(transactionToDelete);
-      setDeleteConfirmOpen(false);
-      setTransactionToDelete(null);
+    if (confirmDelete) {
+      onDelete(confirmDelete);
+      setConfirmDelete(null);
     }
   };
 
-  // Filtrar transações
-  const filteredTransactions = transactions.filter(transaction => {
-    // Filtrar por tipo
-    const typeMatch = typeFilter === "all" || transaction.type === typeFilter;
-    
-    // Filtrar por categoria
-    const categoryMatch = categoryFilter === "all" || transaction.category === categoryFilter;
-    
-    // Filtrar por período
-    let periodMatch = true;
-    const today = new Date();
-    const transactionDate = new Date(transaction.date);
-    
-    if (periodFilter === "today") {
-      periodMatch = (
-        transactionDate.getDate() === today.getDate() &&
-        transactionDate.getMonth() === today.getMonth() &&
-        transactionDate.getFullYear() === today.getFullYear()
-      );
-    } else if (periodFilter === "week") {
-      const weekStart = new Date(today);
-      weekStart.setDate(today.getDate() - today.getDay());
-      periodMatch = transactionDate >= weekStart;
-    } else if (periodFilter === "month") {
-      periodMatch = (
-        transactionDate.getMonth() === today.getMonth() &&
-        transactionDate.getFullYear() === today.getFullYear()
-      );
-    } else if (periodFilter === "year") {
-      periodMatch = transactionDate.getFullYear() === today.getFullYear();
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('pt-BR');
+  };
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(value);
+  };
+
+  const getTransactionTypeBadge = (type: string) => {
+    switch (type) {
+      case 'income':
+        return <Badge variant="outline" className="border-green-500 bg-green-500/10 text-green-700">
+                  <TrendingUp className="mr-2 h-4 w-4"/>
+                  Entrada
+                </Badge>;
+      case 'expense':
+        return <Badge variant="outline" className="border-red-500 bg-red-500/10 text-red-700">
+                  <TrendingDown className="mr-2 h-4 w-4"/>
+                  Saída
+                </Badge>;
+      default:
+        return <Badge variant="outline">{type}</Badge>;
     }
-    
-    // Filtrar por pesquisa
-    const searchMatch = searchQuery.trim() === "" || 
-      transaction.description.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      transaction.relatedTo?.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    return typeMatch && categoryMatch && periodMatch && searchMatch;
-  });
-
-  // Ordenar transações por data (mais recentes primeiro)
-  const sortedTransactions = [...filteredTransactions].sort((a, b) => 
-    new Date(b.date).getTime() - new Date(a.date).getTime()
-  );
-
-  // Obter todas as categorias para o filtro
-  const uniqueCategories = [...new Set(transactions.map(t => t.category))];
+  };
 
   return (
     <>
-      <Card>
-        <CardContent className="p-0">
-          <div className="border-b border-border p-4">
-            <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
-              <div className="flex gap-2">
-                <Button 
-                  variant={typeFilter === "all" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setTypeFilter("all")}
-                  className={typeFilter === "all" ? "bg-dance-primary hover:bg-dance-secondary" : ""}
-                >
-                  Todas
-                </Button>
-                <Button 
-                  variant={typeFilter === "income" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setTypeFilter("income")}
-                  className={typeFilter === "income" ? "bg-green-500 hover:bg-green-600" : "text-green-500"}
-                >
-                  <ArrowDown className="h-4 w-4 mr-1" /> Entradas
-                </Button>
-                <Button 
-                  variant={typeFilter === "expense" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setTypeFilter("expense")}
-                  className={typeFilter === "expense" ? "bg-red-500 hover:bg-red-600" : "text-red-500"}
-                >
-                  <ArrowUp className="h-4 w-4 mr-1" /> Saídas
-                </Button>
-              </div>
-              
-              <div className="flex flex-wrap gap-2 w-full md:w-auto">
-                <Select 
-                  value={periodFilter}
-                  onValueChange={setPeriodFilter}
-                >
-                  <SelectTrigger className="h-9 w-[150px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="today">Hoje</SelectItem>
-                    <SelectItem value="week">Esta semana</SelectItem>
-                    <SelectItem value="month">Este mês</SelectItem>
-                    <SelectItem value="year">Este ano</SelectItem>
-                    <SelectItem value="all">Todos</SelectItem>
-                  </SelectContent>
-                </Select>
-                
-                <Select 
-                  value={categoryFilter}
-                  onValueChange={setCategoryFilter}
-                >
-                  <SelectTrigger className="h-9 w-[150px]">
-                    <SelectValue placeholder="Categoria" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todas categorias</SelectItem>
-                    {uniqueCategories.map(category => (
-                      <SelectItem key={category} value={category}>
-                        {category}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                
-                <Input
-                  placeholder="Buscar..." 
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="h-9 w-full md:w-[200px]"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
+      <div className="bg-card border border-border rounded-lg shadow-sm">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Tipo</TableHead>
+                <TableHead>Descrição</TableHead>
+                <TableHead>Categoria</TableHead>
+                <TableHead>Valor</TableHead>
+                <TableHead>Data</TableHead>
+                <TableHead>Método de Pagamento</TableHead>
+                <TableHead className="w-[100px]">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {transactions.length === 0 ? (
                 <TableRow>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>Descrição</TableHead>
-                  <TableHead>Categoria</TableHead>
-                  <TableHead>Valor</TableHead>
-                  <TableHead>Data</TableHead>
-                  <TableHead>Método</TableHead>
-                  <TableHead>Ações</TableHead>
+                  <TableCell colSpan={7} className="text-center py-8">
+                    Nenhuma transação encontrada.
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {sortedTransactions.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8">
-                      Nenhuma transação encontrada para o filtro selecionado.
+              ) : (
+                transactions.map((transaction) => (
+                  <TableRow key={transaction.id}>
+                    <TableCell>{getTransactionTypeBadge(transaction.type)}</TableCell>
+                    <TableCell>
+                      <div className="font-medium">{transaction.description}</div>
+                      {transaction.relatedTo && (
+                        <div className="text-xs text-muted-foreground">
+                          Relacionado a: {transaction.relatedTo}
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell>{transaction.category}</TableCell>
+                    <TableCell>{formatCurrency(transaction.amount)}</TableCell>
+                    <TableCell>{formatDate(transaction.date)}</TableCell>
+                    <TableCell>{transaction.paymentMethod}</TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            •••
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => onEdit(transaction)}>
+                            <Edit className="mr-2 h-4 w-4" />
+                            Editar
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => handleConfirmDelete(transaction.id)}
+                            className="text-destructive focus:text-destructive"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Excluir
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
-                ) : (
-                  sortedTransactions.map((transaction) => (
-                    <TableRow key={transaction.id}>
-                      <TableCell>
-                        {transaction.type === "income" ? (
-                          <Badge className="bg-green-500">Entrada</Badge>
-                        ) : (
-                          <Badge className="bg-red-500">Saída</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium">{transaction.description}</p>
-                          {transaction.relatedTo && (
-                            <p className="text-xs text-muted-foreground">
-                              {transaction.relatedTo}
-                            </p>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>{transaction.category}</TableCell>
-                      <TableCell className={cn(
-                        "font-medium",
-                        transaction.type === "income" ? "text-green-500" : "text-red-500"
-                      )}>
-                        R$ {transaction.amount.toFixed(2)}
-                      </TableCell>
-                      <TableCell>
-                        {new Date(transaction.date).toLocaleDateString('pt-BR')}
-                      </TableCell>
-                      <TableCell>
-                        {transaction.paymentMethod}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          <Button 
-                            variant="outline" 
-                            size="icon"
-                            onClick={() => onEdit(transaction)}
-                            title="Editar transação"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            size="icon"
-                            onClick={() => confirmDelete(transaction.id)}
-                            className="text-destructive hover:text-destructive"
-                            title="Excluir transação"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+      <Dialog open={!!confirmDelete} onOpenChange={() => setConfirmDelete(null)}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Confirmar exclusão</DialogTitle>
@@ -280,7 +156,7 @@ export const TransactionsList: React.FC<TransactionsListProps> = ({
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)}>
+            <Button variant="outline" onClick={() => setConfirmDelete(null)}>
               Cancelar
             </Button>
             <Button variant="destructive" onClick={handleDelete}>
