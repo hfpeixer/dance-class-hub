@@ -1,6 +1,6 @@
 
 import React from "react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import { Navigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, GraduationCap, Music2, Calendar, DollarSign, TrendingUp, AlertTriangle, UserPlus } from "lucide-react";
