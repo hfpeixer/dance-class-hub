@@ -11,6 +11,7 @@ import {
   DollarSign,
   ShoppingBag,
   Calendar,
+  CalendarDays,
   Settings,
   LogOut,
 } from "lucide-react";
@@ -91,6 +92,13 @@ export const SidebarContent: React.FC<SidebarContentProps> = ({
             label="Mensalidades"
             href="/financeiro"
             isActive={pathname === "/financeiro"}
+            isCollapsed={isCollapsed}
+          />
+          <SidebarItem
+            icon={CalendarDays}
+            label="Controle de Mensalidades"
+            href="/mensalidades"
+            isActive={pathname.startsWith("/mensalidades")}
             isCollapsed={isCollapsed}
           />
           <SidebarItem

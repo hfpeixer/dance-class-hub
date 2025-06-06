@@ -16,6 +16,7 @@ import ModalitiesPage from "@/pages/modalities/ModalitiesPage";
 import SchoolsPage from "@/pages/schools/SchoolsPage";
 import FinancePage from "@/pages/finance/FinancePage";
 import EnrollmentsPage from "@/pages/finance/EnrollmentsPage";
+import MonthlyFeesPage from "@/pages/finance/MonthlyFeesPage";
 import ProductsPage from "@/pages/products/ProductsPage";
 import EventsPage from "@/pages/events/EventsPage";
 import ReportsPage from "@/pages/reports/ReportsPage";
@@ -96,6 +97,12 @@ function App() {
               <Route path="matriculas" element={
                 <ProtectedRoute requiredPermission="finance.manage">
                   <EnrollmentsPage />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="mensalidades" element={
+                <ProtectedRoute requiredPermission="finance.manage">
+                  <MonthlyFeesPage />
                 </ProtectedRoute>
               } />
               
