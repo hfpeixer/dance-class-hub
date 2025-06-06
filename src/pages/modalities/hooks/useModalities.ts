@@ -129,20 +129,48 @@ export const useModalities = () => {
 
   const deleteModality = async (id: string) => {
     try {
-      // Check if modality has any enrollments
-      const { data: enrollments, error: checkError } = await supabase
+      // Check if modality has any active enrollments
+      const { data: enrollments, error: checkEnrollmentsError } = await supabase
         .from('enrollments')
+        .select('id')
+        .eq('modality_id', id)
+        .eq('status', 'active')
+        .limit(1);
+
+      if (checkEnrollmentsError) throw checkEnrollmentsError;
+
+      if (enrollments && enrollments.length > 0) {
+        toast.error('Não é possível excluir uma modalidade que possui matrículas ativas. Cancele as matrículas primeiro.');
+        return;
+      }
+
+      // Check if modality has any classes
+      const { data: classes, error: checkClassesError } = await supabase
+        .from('classes')
         .select('id')
         .eq('modality_id', id)
         .limit(1);
 
-      if (checkError) throw checkError;
+      if (checkClassesError) throw checkClassesError;
 
-      if (enrollments && enrollments.length > 0) {
-        toast.error('Não é possível excluir uma modalidade que possui matrículas ativas');
+      if (classes && classes.length > 0) {
+        toast.error('Não é possível excluir uma modalidade que possui turmas. Remova as turmas primeiro.');
         return;
       }
 
+      // Delete cancelled/inactive enrollments first if any
+      const { error: deleteEnrollmentsError } = await supabase
+        .from('enrollments')
+        .delete()
+        .eq('modality_id', id)
+        .in('status', ['cancelled', 'inactive']);
+
+      if (deleteEnrollmentsError) {
+        console.error('Error deleting related enrollments:', deleteEnrollmentsError);
+        // Continue with deletion even if this fails
+      }
+
+      // Now delete the modality
       const { error } = await supabase
         .from('modalities')
         .delete()
@@ -154,7 +182,7 @@ export const useModalities = () => {
       await fetchModalities(); // Refresh the list
     } catch (error) {
       console.error('Error deleting modality:', error);
-      toast.error('Erro ao remover modalidade');
+      toast.error('Erro ao remover modalidade. Verifique se não há dados relacionados.');
       throw error;
     }
   };

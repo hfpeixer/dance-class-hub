@@ -1,9 +1,8 @@
 
 import React, { useState } from "react";
-import { List, Plus, Search } from "lucide-react";
+import { List, Plus } from "lucide-react";
 import { PageTitle } from "@/components/layout/PageTitle";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { EnrollmentForm } from "./components/EnrollmentForm";
@@ -17,22 +16,28 @@ const EnrollmentsPage = () => {
     addEnrollment,
     updateEnrollment,
     deleteEnrollment,
-    cancelEnrollment
+    cancelEnrollment,
+    isLoading
   } = useEnrollments();
   
   const [openEnrollmentForm, setOpenEnrollmentForm] = useState(false);
   const [editingEnrollment, setEditingEnrollment] = useState<any>(null);
 
-  const handleAddEditEnrollment = (enrollmentData: any) => {
-    if (editingEnrollment) {
-      updateEnrollment(editingEnrollment.id, enrollmentData);
-      toast.success(`Matrícula atualizada com sucesso!`);
-    } else {
-      addEnrollment(enrollmentData);
-      toast.success(`Matrícula registrada com sucesso!`);
+  const handleAddEditEnrollment = async (enrollmentData: any) => {
+    try {
+      if (editingEnrollment) {
+        await updateEnrollment(editingEnrollment.id, enrollmentData);
+        toast.success(`Matrícula atualizada com sucesso!`);
+      } else {
+        await addEnrollment(enrollmentData);
+        toast.success(`Matrícula registrada com sucesso!`);
+      }
+      setOpenEnrollmentForm(false);
+      setEditingEnrollment(null);
+    } catch (error) {
+      // Error handling is done in the hooks
+      console.error('Error saving enrollment:', error);
     }
-    setOpenEnrollmentForm(false);
-    setEditingEnrollment(null);
   };
 
   const handleOpenEnrollmentForm = (enrollment?: any) => {
@@ -44,6 +49,39 @@ const EnrollmentsPage = () => {
     setOpenEnrollmentForm(true);
   };
 
+  const handleDeleteEnrollment = async (id: string) => {
+    try {
+      await deleteEnrollment(id);
+    } catch (error) {
+      // Error handling is done in the hook
+      console.error('Error deleting enrollment:', error);
+    }
+  };
+
+  const handleCancelEnrollment = async (id: string) => {
+    try {
+      await cancelEnrollment(id);
+    } catch (error) {
+      // Error handling is done in the hook
+      console.error('Error cancelling enrollment:', error);
+    }
+  };
+
+  if (isLoading && enrollments.length === 0) {
+    return (
+      <div className="p-6">
+        <PageTitle
+          title="Matrículas"
+          subtitle="Gerenciar matrículas de alunos nas modalidades"
+          icon={List}
+        />
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6">
       <PageTitle
@@ -54,6 +92,7 @@ const EnrollmentsPage = () => {
         <Button 
           className="bg-dance-primary hover:bg-dance-secondary"
           onClick={() => handleOpenEnrollmentForm()}
+          disabled={isLoading}
         >
           <Plus className="mr-2 h-4 w-4" /> Nova Matrícula
         </Button>
@@ -62,8 +101,8 @@ const EnrollmentsPage = () => {
       <EnrollmentsList
         enrollments={enrollments}
         onEdit={handleOpenEnrollmentForm}
-        onDelete={deleteEnrollment}
-        onCancel={cancelEnrollment}
+        onDelete={handleDeleteEnrollment}
+        onCancel={handleCancelEnrollment}
         activeFilter={activeFilter}
         setActiveFilter={setActiveFilter}
       />

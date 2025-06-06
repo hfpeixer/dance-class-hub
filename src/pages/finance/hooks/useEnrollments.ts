@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -5,7 +6,7 @@ import { toast } from "sonner";
 export interface Enrollment {
   id: string;
   studentId: string;
-  studentName: string; // Made required to match types.ts
+  studentName: string;
   modality: string;
   modalityName?: string;
   class: string;
@@ -16,6 +17,8 @@ export interface Enrollment {
   monthlyFee: number;
   paymentDay: number;
   notes?: string;
+  date?: string; // For backward compatibility
+  value?: number; // For backward compatibility
 }
 
 export const useEnrollments = () => {
@@ -23,80 +26,84 @@ export const useEnrollments = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  useEffect(() => {
-    const fetchEnrollments = async () => {
-      setIsLoading(true);
-      setError(null);
-      
-      try {
-        const { data, error } = await supabase
-          .from('enrollments')
-          .select(`
-            *,
-            students (
-              id,
-              name
-            ),
-            modalities (
-              id,
-              name
-            ),
-            classes (
-              id,
-              name
-            )
-          `);
-        
-        if (error) throw error;
-        
-        if (data) {
-          const formattedEnrollments: Enrollment[] = data.map((enrollment: any) => ({
-            id: enrollment.id,
-            studentId: enrollment.student_id,
-            studentName: enrollment.students?.name || 'Desconhecido', // Provide default value
-            modality: enrollment.modality_id,
-            modalityName: enrollment.modalities?.name || 'Desconhecida',
-            class: enrollment.class_id,
-            className: enrollment.classes?.name || 'Desconhecida',
-            enrollmentDate: enrollment.enrollment_date,
-            status: enrollment.status as "active" | "inactive" | "cancelled",
-            enrollmentFee: enrollment.enrollment_fee,
-            monthlyFee: enrollment.monthly_fee,
-            paymentDay: enrollment.payment_day,
-            notes: enrollment.notes
-          }));
-          
-          setEnrollments(formattedEnrollments);
-        }
-        
-        setIsLoading(false);
-      } catch (err) {
-        console.error("Error fetching enrollments:", err);
-        setError(err instanceof Error ? err : new Error('Failed to fetch enrollments'));
-        setIsLoading(false);
-        toast.error("Erro ao carregar matrículas");
-      }
-    };
+  const fetchEnrollments = async () => {
+    setIsLoading(true);
+    setError(null);
     
+    try {
+      const { data, error } = await supabase
+        .from('enrollments')
+        .select(`
+          *,
+          students (
+            id,
+            name
+          ),
+          modalities (
+            id,
+            name
+          ),
+          classes (
+            id,
+            name
+          )
+        `)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      if (data) {
+        const formattedEnrollments: Enrollment[] = data.map((enrollment: any) => ({
+          id: enrollment.id,
+          studentId: enrollment.student_id,
+          studentName: enrollment.students?.name || 'Desconhecido',
+          modality: enrollment.modality_id,
+          modalityName: enrollment.modalities?.name || 'Desconhecida',
+          class: enrollment.class_id,
+          className: enrollment.classes?.name || 'Desconhecida',
+          enrollmentDate: enrollment.enrollment_date,
+          status: enrollment.status as "active" | "inactive" | "cancelled",
+          enrollmentFee: enrollment.enrollment_fee,
+          monthlyFee: enrollment.monthly_fee,
+          paymentDay: enrollment.payment_day,
+          notes: enrollment.notes,
+          // For backward compatibility
+          date: enrollment.enrollment_date,
+          value: enrollment.enrollment_fee
+        }));
+        
+        setEnrollments(formattedEnrollments);
+      }
+      
+    } catch (err) {
+      console.error("Error fetching enrollments:", err);
+      setError(err instanceof Error ? err : new Error('Failed to fetch enrollments'));
+      toast.error("Erro ao carregar matrículas");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchEnrollments();
   }, []);
 
-  const addEnrollment = async (enrollment: Omit<Enrollment, "id">) => {
+  const addEnrollment = async (enrollmentData: any) => {
     setIsLoading(true);
     
     try {
-      console.log("Adding enrollment with data:", enrollment);
+      console.log("Adding enrollment with data:", enrollmentData);
       
       const dbEnrollment = {
-        student_id: enrollment.studentId,
-        modality_id: enrollment.modality,
-        class_id: enrollment.class,
-        enrollment_date: enrollment.enrollmentDate,
-        status: enrollment.status,
-        enrollment_fee: enrollment.enrollmentFee,
-        monthly_fee: enrollment.monthlyFee,
-        payment_day: enrollment.paymentDay,
-        notes: enrollment.notes
+        student_id: enrollmentData.studentId,
+        modality_id: enrollmentData.modality,
+        class_id: enrollmentData.class,
+        enrollment_date: enrollmentData.enrollmentDate,
+        status: enrollmentData.status || 'active',
+        enrollment_fee: enrollmentData.enrollmentFee,
+        monthly_fee: enrollmentData.monthlyFee,
+        payment_day: enrollmentData.paymentDay,
+        notes: enrollmentData.notes
       };
       
       console.log("Database enrollment object:", dbEnrollment);
@@ -118,39 +125,43 @@ export const useEnrollments = () => {
             id,
             name
           )
-        `);
+        `)
+        .single();
       
       if (error) throw error;
       
-      if (data && data.length > 0) {
+      if (data) {
         const newEnrollment: Enrollment = {
-          id: data[0].id,
-          studentId: data[0].student_id,
-          studentName: data[0].students?.name || 'Desconhecido',
-          modality: data[0].modality_id,
-          modalityName: data[0].modalities?.name || 'Desconhecida',
-          class: data[0].class_id,
-          className: data[0].classes?.name || 'Desconhecida',
-          enrollmentDate: data[0].enrollment_date,
-          status: data[0].status as "active" | "inactive" | "cancelled",
-          enrollmentFee: data[0].enrollment_fee,
-          monthlyFee: data[0].monthly_fee,
-          paymentDay: data[0].payment_day,
-          notes: data[0].notes
+          id: data.id,
+          studentId: data.student_id,
+          studentName: data.students?.name || 'Desconhecido',
+          modality: data.modality_id,
+          modalityName: data.modalities?.name || 'Desconhecida',
+          class: data.class_id,
+          className: data.classes?.name || 'Desconhecida',
+          enrollmentDate: data.enrollment_date,
+          status: data.status as "active" | "inactive" | "cancelled",
+          enrollmentFee: data.enrollment_fee,
+          monthlyFee: data.monthly_fee,
+          paymentDay: data.payment_day,
+          notes: data.notes,
+          date: data.enrollment_date,
+          value: data.enrollment_fee
         };
         
-        setEnrollments(prevEnrollments => [...prevEnrollments, newEnrollment]);
+        setEnrollments(prevEnrollments => [newEnrollment, ...prevEnrollments]);
         toast.success("Matrícula adicionada com sucesso");
+        
+        return data;
       }
       
-      setIsLoading(false);
-      return data?.[0];
     } catch (err) {
       console.error("Error adding enrollment:", err);
       setError(err instanceof Error ? err : new Error('Failed to add enrollment'));
-      setIsLoading(false);
       toast.error("Erro ao adicionar matrícula");
-      return null;
+      throw err;
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -176,60 +187,17 @@ export const useEnrollments = () => {
       
       if (error) throw error;
       
-      const { data: updatedData, error: fetchError } = await supabase
-        .from('enrollments')
-        .select(`
-          *,
-          students (
-            id,
-            name
-          ),
-          modalities (
-            id,
-            name
-          ),
-          classes (
-            id,
-            name
-          )
-        `)
-        .eq('id', id)
-        .single();
+      // Fetch updated data
+      await fetchEnrollments();
+      toast.success("Matrícula atualizada com sucesso");
       
-      if (fetchError) throw fetchError;
-      
-      if (updatedData) {
-        const updatedEnrollmentWithNames: Enrollment = {
-          id: updatedData.id,
-          studentId: updatedData.student_id,
-          studentName: updatedData.students?.name || 'Desconhecido',
-          modality: updatedData.modality_id,
-          modalityName: updatedData.modalities?.name || 'Desconhecida',
-          class: updatedData.class_id,
-          className: updatedData.classes?.name || 'Desconhecida',
-          enrollmentDate: updatedData.enrollment_date,
-          status: updatedData.status as "active" | "inactive" | "cancelled",
-          enrollmentFee: updatedData.enrollment_fee,
-          monthlyFee: updatedData.monthly_fee,
-          paymentDay: updatedData.payment_day,
-          notes: updatedData.notes
-        };
-        
-        setEnrollments(prevEnrollments => 
-          prevEnrollments.map(enrollment => 
-            enrollment.id === id ? updatedEnrollmentWithNames : enrollment
-          )
-        );
-        
-        toast.success("Matrícula atualizada com sucesso");
-      }
-      
-      setIsLoading(false);
     } catch (err) {
       console.error("Error updating enrollment:", err);
       setError(err instanceof Error ? err : new Error('Failed to update enrollment'));
-      setIsLoading(false);
       toast.error("Erro ao atualizar matrícula");
+      throw err;
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -249,12 +217,14 @@ export const useEnrollments = () => {
       );
       
       toast.success("Matrícula removida com sucesso");
-      setIsLoading(false);
+      
     } catch (err) {
       console.error("Error deleting enrollment:", err);
       setError(err instanceof Error ? err : new Error('Failed to delete enrollment'));
-      setIsLoading(false);
       toast.error("Erro ao remover matrícula");
+      throw err;
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -271,17 +241,19 @@ export const useEnrollments = () => {
       
       setEnrollments(prevEnrollments => 
         prevEnrollments.map(enrollment => 
-          enrollment.id === id ? { ...enrollment, status: 'cancelled' } : enrollment
+          enrollment.id === id ? { ...enrollment, status: 'cancelled' as const } : enrollment
         )
       );
       
       toast.success("Matrícula cancelada com sucesso");
-      setIsLoading(false);
+      
     } catch (err) {
       console.error("Error cancelling enrollment:", err);
       setError(err instanceof Error ? err : new Error('Failed to cancel enrollment'));
-      setIsLoading(false);
       toast.error("Erro ao cancelar matrícula");
+      throw err;
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -303,6 +275,7 @@ export const useEnrollments = () => {
     getEnrollmentsByStudent,
     getEnrollmentsByStatus,
     isLoading,
-    error
+    error,
+    refetch: fetchEnrollments
   };
 };
